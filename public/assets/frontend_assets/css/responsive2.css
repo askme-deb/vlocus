@@ -1,0 +1,316 @@
+@media (max-width: 768px) {
+    .top_banner_img{
+        width: 100%;
+    }
+    .top_banner h1 {
+        font-size: 35px;
+        font-weight: 800;
+    }
+    .top_banner h2 {
+        font-size: 35px;
+        font-weight: 300;
+    }
+    .top_banner_arrow{
+        width: 50px !important;
+    }
+    .text-alignment{
+        text-align: left !important;
+    }
+.track_shipment_img{
+    width: 100%;
+    height: auto;
+}
+.col-lg-4.col-md-4.col-sm-4.d-flex {
+    margin: 0px;
+}
+.home_solution .col-lg-12.d-flex.ps-0{
+    padding:0px ;
+}
+.home_solution .col-lg-4 p {
+    padding: 0px 20px;
+    margin: 0px;
+    font-size: 14px;
+}
+section{
+    padding: 30px 0px !important;
+}
+.track_shipment h1 {
+    font-size: 30px;
+    font-weight: 700;
+}
+.track_shipment_padding{
+    padding-left: 0px;
+}
+.how_works .card {
+    width: auto;
+}
+.how_works_padding{
+    padding-top:10px;
+    padding-bottom: 10px;
+}
+
+.home_points .col-lg-6{
+    padding-top: 30px !important;
+    padding-bottom: 15px !important;
+}
+.home_solution .col-lg-12.d-flex.ps-0{
+flex-wrap: wrap;
+}
+.home_solution .col-lg-4 {
+    width: 100%;
+}
+.testimonial .img-fluid{
+    width: 100%;
+    height: auto;
+}
+.download_app_img{
+    width: 100%;
+}
+.download_app_margin{
+    margin-left: .5rem;
+}
+.download_app_qr{
+    width: 100%;
+}
+.download_app_btn {
+    width: 100%;
+   
+       
+}
+.how_works img.card-img-top {
+    width: 100%;
+  
+}
+.navbar-toggler:focus{
+    box-shadow: none;
+}
+/*.navbar-toggler-icon{*/
+/*    background-image: url(/assets/img/home/sidebar.png);*/
+/*}*/
+.download_app_m{
+    margin-left: 10px;
+}
+.download_app_btn {
+    width: 100%;
+    
+}
+.offcanvas-header{
+    background-color: #ebd873;
+  }
+  .offcanvas-body {
+    background: linear-gradient(#ebd873, #fff);
+}
+button.slick-next.slick-arrow {
+    display: none !important;
+}
+button.slick-prev.slick-arrow {
+    display: none !important;
+}
+.slick-list.draggable {
+    padding: 10px 10px;
+}
+.testimonial_padding{
+    padding-top:2rem;
+}
+.booking-form input{
+    font-size: 14px;
+}
+}
+@media (max-width: 425px) {
+    .accordion_number {
+        background: #e7d15a;
+        border-radius: 50%;
+        width: 50px;
+        height: 30px;
+        display: flex
+    ;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin: 0px 12px;
+    }
+    section.top_banner.blog.pt-5.pb-0.bg-light{
+        text-align: start !important;
+    }
+    .accordion_number1{
+        background: #e7d15a;
+        border-radius: 50%;
+        width: 30px !important;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin: 0px 12px;
+    }
+}
+@media (max-width: 1440px) {
+    .how_works .card {
+        border-radius: 35px;
+        padding: 40px 10px;
+        min-height: 392px;
+    }
+    .top_banner h1 {
+        font-size: 64px;
+        font-weight: 800;
+    }
+  
+}
+
+@media screen and (min-device-width: 320px) and (max-device-width: 767px) {
+    .topBannerArrow{
+    display:none;
+    }
+    .topBanner button {
+        border-radius: 15px !important;
+    }
+    .fromTo button{
+        border-radius: 15px !important;
+    }
+} 
+
+@media (width: 1367px) {
+button.slick-prev.slick-arrow {
+    position: absolute;
+    top: 0;
+    left: 752px;
+}
+.download_app_m {
+    margin-left: 10px;
+}
+
+}
+
+@media (max-width: 775px) {
+  
+    .navbar-nav {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        margin-bottom: 0;
+        list-style: none;
+    }
+}
+@media (max-width: 991px) {
+  
+    .navbar-nav {
+        display: flex;
+        flex-direction: row;
+        padding-left: 0;
+        margin-bottom: 0;
+        list-style: none;
+    }
+    .navbar-expand-lg .navbar-nav .nav-link {
+        padding-right: .5rem;
+        padding-left: .5rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .top_banner h1 {
+        font-size: 45px;
+        font-weight: 800;
+    }
+    .d-flex.flex-wrap.justify-content-center.align-items-center.gap-3{
+        justify-content: flex-start !important;
+    }
+    .top_banner h2 {
+        font-size: 45px;
+        font-weight: 300;
+    }
+    .track_shipment_img {
+        width: 100%;
+    }
+    .home_points img {
+        width: 100%;
+    }
+  
+    .download_app_qr {
+        width: 100%;
+    }
+    .download_app_btn{
+        width: 100%;
+    }
+    button.slick-prev.slick-arrow {
+        position: absolute;
+        top: 0;
+        left: 512px;
+    }
+    .col-lg-9.col-sm-9.col-md-9.download_app_m.alignment {
+        margin-left: 10px;
+    }
+    .download_app_img {
+        width: 100%;
+    }
+}
+
+@media (max-width: 320px) {
+    .top_banner h1 {
+        font-size: 26px;
+        font-weight: 800;
+    }
+    
+        .top_banner h2 {
+            font-size: 26px;
+            font-weight: 300;
+        }
+        .top_banner_img {
+            width: 100%;
+        }
+           .home_points img{
+width: 100%;
+        }
+        .asked_question .mx-4{
+margin: 0px !important;
+        }
+        .accordion-button {
+            padding: 1rem 0rem;
+            }
+            .accordion_number1{
+                background: #e7d15a;
+                border-radius: 50%;
+                width: 30px !important;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                margin: 0px 12px;
+            }
+}
+/* @media (max-width: 1367px) {
+    button.slick-prev.slick-arrow {
+        position: absolute;
+        top: 0;
+        left: 750px;
+    }
+}
+@media screen and (min-device-width: 481px) and (max-device-width: 768px) { 
+
+} */
+@media (max-width: 375px) {
+.viewBusesBox .col-lg-5.alignment.p-5 {
+    padding: 5px !important;
+}
+.accordion_number1{
+    background: #e7d15a;
+    border-radius: 50%;
+    width: 30px !important;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin: 0px 12px;
+}
+@media (max-width: 1366px) {
+    button.slick-prev.slick-arrow {
+        position: absolute;
+        top: 0;
+        /* right: -67px; */
+        left: 730px !important;
+    }
+ 
+
+}
+}
