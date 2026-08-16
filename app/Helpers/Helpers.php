@@ -67,7 +67,7 @@ if (!function_exists('getDistanceFromAPI')) {
     function getDistanceFromAPI($originLat, $originLng, $destinationLat, $destinationLng)
     {
         $apiKey = 'AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl'; // Move to config if needed
-        $url = "https://maps.gomaps.pro/maps/api/distancematrix/json?origins={$originLat},{$originLng}&destinations={$destinationLat},{$destinationLng}&key={$apiKey}";
+        $url = "https://gomaps.pro/maps/api/distancematrix/json?origins={$originLat},{$originLng}&destinations={$destinationLat},{$destinationLng}&key={$apiKey}";
 
         $curl = curl_init();
 

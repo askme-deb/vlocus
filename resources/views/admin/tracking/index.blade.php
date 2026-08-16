@@ -2122,7 +2122,7 @@ div#search-container {
             }
 
             const script = document.createElement('script');
-            script.src = `https://maps.gomaps.pro/maps/api/js?key=AIzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=geometry,places&callback=initMap`;
+            script.src = `https://maps.mapthrust.io//maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=geometry,places&callback=initMap`;
             script.async = true;
             script.defer = true;
             script.onerror = reject;

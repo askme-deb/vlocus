@@ -459,6 +459,7 @@ div#deliveryNote {
 
 div#suggestions {
     top: 40px;
+    display: none;
 }
 
 
@@ -670,6 +671,10 @@ div#suggestions {
                             placeholder="Type here..." readonly>
                         <input type="hidden" value="{{ auth()->user()->id ?? '' }}" name="branch_id" id="branch_id">
                     @endif
+
+                    @if (! auth()->user()->hasRole('Employee') && ! auth()->user()->hasRole('Branch'))
+                        <input type="hidden" name="branch_id" id="branch_id" value="">
+                    @endif
                 </div>
 
                 <div class="custom-input-wrapper mb-3">
@@ -680,7 +685,7 @@ div#suggestions {
                         </a>
                     </label>
                     <input type="text" class="form-control custom-input" id="search_shop_name" name="consignee_details"
-                        placeholder="Type here...">
+                        placeholder="Type here..." autocomplete="off">
                     <div id="suggestions" class="list-group position-absolute z-index-3"
                         style="z-index: 99999; height: 100px; overflow-y: auto; width: 95%;background: white;">
                     </div>
@@ -696,30 +701,32 @@ div#suggestions {
                     <input type="text" class="form-control custom-input" placeholder="9999999999">
                 </div> --}}
 
-                <div id="product-container">
-                    <div class="product-row">
-                        <input type="text" placeholder="Title" class="product-title form-control custom-input">
-                        <select class="product-unit form-select custom-input">
-                            <option value="unit">Unit</option>
-                            <option value="box">Box</option>
-                        </select>
-                        <input type="number" min="1" value="1"
-                            class="product-qty form-control custom-input">
-                        <button type="button" class="remove-row btn btn-sm btn-danger" onclick="removeRow(this)">
-                            <i class="material-icons-outlined">delete</i>
-                        </button>
-                        <button type="button" class="add-row btn btn-sm btn-success" onclick="addRow()">
-                            <i class="material-icons-outlined">add</i>
-                        </button>
+                <div id="productTotalSection" style="display:none;">
+                    <div id="product-container">
+                        <div class="product-row">
+                            <input type="text" placeholder="Title" class="product-title form-control custom-input">
+                            <select class="product-unit form-select custom-input">
+                                <option value="unit">Unit</option>
+                                <option value="box">Box</option>
+                            </select>
+                            <input type="number" min="1" value="1"
+                                class="product-qty form-control custom-input">
+                            <button type="button" class="remove-row btn btn-sm btn-danger" onclick="removeRow(this)">
+                                <i class="material-icons-outlined">delete</i>
+                            </button>
+                            <button type="button" class="add-row btn btn-sm btn-success" onclick="addRow()">
+                                <i class="material-icons-outlined">add</i>
+                            </button>
+                        </div>
                     </div>
-                </div>
 
 
-                {{-- <button type="button" class="btn btn-sm btn-success" onclick="addRow()">+ Add More</button> --}}
+                    {{-- <button type="button" class="btn btn-sm btn-success" onclick="addRow()">+ Add More</button> --}}
 
-                <div class="custom-input-wrapper mb-3" style="margin-top: 15px;">
-                    <label class="custom-floating-label">TOTAL</label>
-                    <input type="text" id="total-pcs" class="form-control custom-input" placeholder="0">
+                    <div class="custom-input-wrapper mb-3" style="margin-top: 15px;">
+                        <label class="custom-floating-label">TOTAL</label>
+                        <input type="text" id="total-pcs" class="form-control custom-input" placeholder="0">
+                    </div>
                 </div>
 
                 {{-- <div class="custom-input-wrapper mb-3">
@@ -800,9 +807,6 @@ div#suggestions {
                             <input type="text" id="delivery_date" name="delivery_date"
                                 value="{{ old('delivery_date') }}" class="form-control" placeholder="DD/MM/YYYY">
                             <div class="invalid-feedback">Please enter a delivery date.</div>
-
-                            <input type="text" id="route_code" name="route_code"
-                                value="{{ old('route_code') }}" class="form-control mt-2" placeholder="Route (e.g. R-1)">
 
 
                     </div>
@@ -1027,25 +1031,16 @@ div#suggestions {
                             <div class="mb-3 col-md-6">
                                 <label for="vehicle_number" class="form-label">Vehicle Number <span
                                         class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="vehicle_number" id="vehicle_number"
-                                    placeholder="Enter Vehicle Number" value="{{ old('vehicle_number') }}" required>
-                                <div class="valid-feedback">Looks good!</div>
-                                <div class="invalid-feedback">Please enter the vehicle number.</div>
-                            </div>
-
-                            <!-- RWC Number -->
-                            <div class="mb-3 col-md-6">
-                                <label for="rwc_number" class="form-label">RWC Number <span
-                                        class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" name="rwc_number" id="rwc_number"
-                                        placeholder="Enter RWC Number" value="{{ old('rwc_number') }}" required>
+                                    <input type="text" class="form-control" name="vehicle_number" id="vehicle_number"
+                                        placeholder="Enter Vehicle Number" value="{{ old('vehicle_number') }}" required>
                                     <button type="button" class="btn btn-grd-info text-light" id="modalVerifyRcBtn">Verify</button>
                                 </div>
                                 <small id="modalRcVerifyStatus" class="d-block mt-1"></small>
+                                <input type="hidden" name="rwc_number" id="rwc_number" value="{{ old('rwc_number') }}">
                                 <input type="hidden" name="rc_verification_data" id="modal_rc_verification_data">
                                 <div class="valid-feedback">Looks good!</div>
-                                <div class="invalid-feedback">Please enter the RWC number.</div>
+                                <div class="invalid-feedback">Please enter the vehicle number.</div>
                             </div>
 
                             <!-- Engine Number -->
@@ -1234,13 +1229,13 @@ div#suggestions {
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-    {{-- <script>
+    <script>
         flatpickr("#delivery_date", {
             dateFormat: "d/m/Y",
             minDate: "today",
             closeOnSelect: true,
         });
-    </script> --}}
+    </script>
 
     <script>
         // Initialize Flatpickr on the "Add New Driver" modal's DOB input
@@ -1295,6 +1290,9 @@ div#suggestions {
                 // .off("click");               // remove default close behavior
 
                 $("#edit-submit-close-btn").hide();
+
+                // Product/Total fields stay hidden until a destination shop is picked
+                $('#productTotalSection').hide();
 
                 // Open offcanvas manually
                 let offcanvas = new bootstrap.Offcanvas($("#deliveryNote")[0]);
@@ -1437,7 +1435,7 @@ div#suggestions {
 
         function lockModalRcField() {
             modalRcVerified = true;
-            $('#rwc_number').prop('readonly', true);
+            $('#vehicle_number').prop('readonly', true);
             $('#modalVerifyRcBtn')
                 .prop('disabled', true)
                 .removeClass('btn-grd-info')
@@ -1449,7 +1447,7 @@ div#suggestions {
             modalRcVerified = false;
             $('#modal_rc_verification_data').val('');
             $('#modalRcVerifyStatus').removeClass('text-success text-danger').text('');
-            $('#rwc_number').prop('readonly', false);
+            $('#vehicle_number').prop('readonly', false);
             $('#modalVerifyRcBtn')
                 .prop('disabled', false)
                 .removeClass('btn-grd-success')
@@ -1458,8 +1456,9 @@ div#suggestions {
         }
 
         // Invalidate a previously verified payload if the user edits the
-        // RWC number afterwards, so mismatched data never gets saved.
-        $('#rwc_number').on('input', function() {
+        // vehicle number afterwards, so mismatched data never gets saved.
+        $('#vehicle_number').on('input', function() {
+            $('#rwc_number').val($(this).val());
             if (modalRcVerified) return;
             $('#modal_rc_verification_data').val('');
             $('#modalRcVerifyStatus').removeClass('text-success text-danger').text('');
@@ -1468,7 +1467,7 @@ div#suggestions {
         $('#modalVerifyRcBtn').on('click', function() {
             if (modalRcVerified) return;
 
-            let rwcNumber = $('#rwc_number').val().trim().toUpperCase();
+            let rwcNumber = $('#vehicle_number').val().trim().toUpperCase();
             let $btn = $(this);
             let $status = $('#modalRcVerifyStatus');
 
@@ -1476,10 +1475,11 @@ div#suggestions {
             $('#modal_rc_verification_data').val('');
 
             if (!rwcNumber) {
-                round_error_noti('Please enter the RWC / registration number first.');
+                round_error_noti('Please enter the vehicle / registration number first.');
                 return;
             }
 
+            $('#vehicle_number').val(rwcNumber);
             $('#rwc_number').val(rwcNumber);
 
             function callVerify(lat, lng) {
@@ -1507,6 +1507,7 @@ div#suggestions {
                             if ((data.reg_no || data.vehicle_number) && !$('#vehicle_number').val()) {
                                 $('#vehicle_number').val(data.reg_no || data.vehicle_number);
                             }
+                            $('#rwc_number').val($('#vehicle_number').val());
 
                             let fuelType = (data.type || '').trim().toLowerCase();
                             if (fuelType === 'petrol') {
@@ -1913,7 +1914,7 @@ div#suggestions {
                     return;
                 }
 
-                $.get('https://maps.gomaps.pro/maps/api/place/textsearch/json', {
+                $.get('https://maps.mapthrust.io//maps/api/place/textsearch/json', {
                     key: apiKey,
                     query: query
                 }, function(response) {
@@ -1927,7 +1928,7 @@ div#suggestions {
                             var lng = item.geometry?.location?.lng || '';
                             var photoRef = item.photos?.[0]?.photo_reference || '';
                             var photoUrl = photoRef ?
-                                `https://maps.gomaps.pro/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
+                                `https://maps.mapthrust.io//maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
                                 '';
 
                             var $option = $(
@@ -1991,7 +1992,7 @@ div#suggestions {
                     return;
                 }
 
-                $.get('https://maps.gomaps.pro/maps/api/place/textsearch/json', {
+                $.get('https://maps.mapthrust.io//maps/api/place/textsearch/json', {
                     key: apiKey,
                     query: query
                 }, function(response) {
@@ -2007,7 +2008,7 @@ div#suggestions {
                             var lng = item.geometry?.location?.lng || '';
                             var photoRef = item.photos?.[0]?.photo_reference || '';
                             var photoUrl = photoRef ?
-                                `https://maps.gomaps.pro/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
+                                `https://maps.mapthrust.io//maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
                                 '';
 
                             var $option = $(
@@ -2068,7 +2069,7 @@ div#suggestions {
 
 
 
-    <script src="https://maps.gomaps.pro/maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,geometry">
+    <script src="https://maps.mapthrust.io//maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,geometry">
     </script>
 
     <script>
@@ -2076,17 +2077,17 @@ div#suggestions {
         let routeLine;
         let selectedShops = [];
         let shopMarkers = [];
-        // let driverLat = 22.5059365;
-        // let driverLng = 88.3716779;
+        let driverLat = 22.5059365;
+        let driverLng = 88.3716779;
 
         @if (auth()->user()->hasRole('Employee'))
-            let driverLat = {{ auth()->user()->employee?->branch?->branch?->latitude }};
-            let driverLng = {{ auth()->user()->employee?->branch?->branch?->longitude }};
+            driverLat = {{ auth()->user()->employee?->branch?->branch?->latitude ?? 22.5059365 }};
+            driverLng = {{ auth()->user()->employee?->branch?->branch?->longitude ?? 88.3716779 }};
         @endif
 
         @if (auth()->user()->hasRole('Branch'))
-            let driverLat = {{ auth()->user()->branch?->latitude }};
-            let driverLng = {{ auth()->user()->branch?->longitude }};
+            driverLat = {{ auth()->user()->branch?->latitude ?? 22.5059365 }};
+            driverLng = {{ auth()->user()->branch?->longitude ?? 88.3716779 }};
         @endif
 
         function initializeMap() {
@@ -2160,7 +2161,7 @@ div#suggestions {
             };
 
             try {
-                const response = await fetch("https://routes.gomaps.pro/directions/v2:computeRoutes", {
+                const response = await fetch("https://routes.mapthrust.io/directions/v2:computeRoutes", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -2341,7 +2342,11 @@ div#suggestions {
 
 
         $(document).ready(function() {
-            initializeMap(); // Always initialize with driver's location
+            try {
+                initializeMap(); // Always initialize with driver's location
+            } catch (e) {
+                console.error('initializeMap failed, continuing without the map:', e);
+            }
             const $input = $('#search_shop_name');
             const $suggestions = $('#suggestions');
             const $sortableList = $('#sortable-shop-location');
@@ -2408,6 +2413,8 @@ div#suggestions {
                 $('#shop_addresse').val(data.address);
                 $('#shop_latitude').val(data.lat);
                 $('#shop_longitude').val(data.lng);
+
+                $('#productTotalSection').show();
 
                 selectedShops.push({
                     id: data.id,
@@ -2569,7 +2576,8 @@ div#suggestions {
             $('#search_shop_name').on('click', function() {
                 setTimeout(() => {
                     // Only close suggestions and collapse details if focus is truly lost
-                    if (!$('#suggestions').is(':hover') && !$('.list-group-item').is(':hover')) {
+                    const suggestionsHovered = document.querySelector('#suggestions:hover, .list-group-item:hover');
+                    if (!suggestionsHovered) {
                         $('.shop-details').slideUp(200);
                         $('.toggle-details i').removeClass('fa-chevron-up').addClass(
                             'fa-chevron-down');
@@ -2583,9 +2591,7 @@ div#suggestions {
 
 
         });
-    </script>
 
-    <script>
         $(document).ready(function() {
 
             // Add Delivery Task
@@ -2750,6 +2756,7 @@ div#suggestions {
 
                 // Reset form
                 this.reset();
+                $('#productTotalSection').hide();
                 $("#product-container").html(`
                 <div class="product-row">
                     <input type="text" placeholder="Title" class="product-title form-control custom-input">
@@ -2855,6 +2862,7 @@ div#suggestions {
 
                 // var deliveryNote = new bootstrap.Offcanvas('#deliveryNote');
                 // deliveryNote.show();
+                $('#productTotalSection').show();
                 updateTotal();
             });
 

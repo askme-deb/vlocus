@@ -65,19 +65,10 @@
                                     <input type="text" class="form-control" name="vehicle_number" id="vehicle_number"
                                         placeholder="Enter Vehicle Number"
                                         value="{{ old('vehicle_number', $data->vehicle_number) }}" required>
+                                    <input type="hidden" name="rwc_number" id="rwc_number"
+                                        value="{{ old('rwc_number', $data->vehicle_number) }}">
                                     <div class="valid-feedback">Looks good!</div>
                                     <div class="invalid-feedback">Please enter the vehicle number.</div>
-                                </div>
-
-                                <!-- RWC Number -->
-                                <div class="mb-3 col-md-6">
-                                    <label for="rwc_number" class="form-label">RWC Number <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="rwc_number" id="rwc_number"
-                                        placeholder="Enter RWC Number" value="{{ old('rwc_number', $data->rwc_number) }}"
-                                        required>
-                                    <div class="valid-feedback">Looks good!</div>
-                                    <div class="invalid-feedback">Please enter the RWC number.</div>
                                 </div>
 
                                 <!-- Engine Number -->
@@ -364,7 +355,11 @@
 
 
         $(document).ready(function() {
-        
+
+            $('#vehicle_number').on('input', function() {
+                $('#rwc_number').val($(this).val());
+            });
+
             $('#brand_id').on('change', function() {
                 var brandId = $(this).val();
                 var $modelSelect = $('#model_id');

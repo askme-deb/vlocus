@@ -61,57 +61,53 @@
                                     <div class="mb-3 col-md-6">
                                         <label for="vehicle_number" class="form-label">Vehicle Number <span
                                                 class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="vehicle_number" id="vehicle_number"
-                                            placeholder="Enter Vehicle Number" value="{{ old('vehicle_number') }}" required>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="vehicle_number" id="vehicle_number"
+                                                placeholder="Enter Vehicle Number" value="{{ old('vehicle_number') }}" required>
+                                            <button type="button" class="btn btn-grd-info text-light" id="verifyRcBtn">Verify</button>
+                                        </div>
+                                        <small id="rcVerifyStatus" class="d-block mt-1"></small>
+                                        <input type="hidden" name="rwc_number" id="rwc_number" value="{{ old('rwc_number') }}">
+                                        <input type="hidden" name="rc_verification_data" id="rc_verification_data" value="{{ old('rc_verification_data') }}">
                                         <div class="valid-feedback">Looks good!</div>
                                         <div class="invalid-feedback">Please enter the vehicle number.</div>
                                     </div>
 
-                                    <!-- RWC Number -->
-                                    <div class="mb-3 col-md-6">
-                                        <label for="rwc_number" class="form-label">RWC Number <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" name="rwc_number" id="rwc_number"
-                                                placeholder="Enter RWC Number" value="{{ old('rwc_number') }}" required>
-                                            <button type="button" class="btn btn-grd-info text-light" id="verifyRcBtn">Verify</button>
-                                        </div>
-                                        <small id="rcVerifyStatus" class="d-block mt-1"></small>
-                                        <input type="hidden" name="rc_verification_data" id="rc_verification_data" value="{{ old('rc_verification_data') }}">
-                                        <div class="valid-feedback">Looks good!</div>
-                                        <div class="invalid-feedback">Please enter the RWC number.</div>
-                                    </div>
-
                                     <!-- Verified RC Details -->
                                     <div class="mb-3 col-md-12" id="rcVerifiedFieldsWrap" style="display: none;">
-                                        <div class="row g-2">
-                                            <div class="col-md-3">
-                                                <small class="text-muted d-block">Owner Name</small>
-                                                <input type="text" class="form-control form-control-sm" id="rc_owner_name" readonly>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <small class="text-muted d-block">Chassis Number</small>
-                                                <input type="text" class="form-control form-control-sm" id="rc_chassis_number" readonly>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <small class="text-muted d-block">Vehicle Class</small>
-                                                <input type="text" class="form-control form-control-sm" id="rc_vehicle_class" readonly>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <small class="text-muted d-block">Registered RTO</small>
-                                                <input type="text" class="form-control form-control-sm" id="rc_rto" readonly>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <small class="text-muted d-block">RC Valid Till</small>
-                                                <input type="text" class="form-control form-control-sm" id="rc_valid_till" readonly>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <small class="text-muted d-block">Insurance Valid Till</small>
-                                                <input type="text" class="form-control form-control-sm" id="rc_insurance_valid_till" readonly>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <small class="text-muted d-block">PUCC Valid Till</small>
-                                                <input type="text" class="form-control form-control-sm" id="rc_pucc_valid_till" readonly>
+                                        <div class="border rounded p-3 bg-light-subtle">
+                                            <h6 class="text-muted mb-3">
+                                                <i class="bx bx-check-shield text-success"></i> Verified RC Details
+                                            </h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-3 col-sm-6">
+                                                    <small class="text-muted d-block">Owner Name</small>
+                                                    <input type="text" class="form-control form-control-sm" id="rc_owner_name" readonly>
+                                                </div>
+                                                <div class="col-md-3 col-sm-6">
+                                                    <small class="text-muted d-block">Chassis Number</small>
+                                                    <input type="text" class="form-control form-control-sm" id="rc_chassis_number" readonly>
+                                                </div>
+                                                <div class="col-md-3 col-sm-6">
+                                                    <small class="text-muted d-block">Vehicle Class</small>
+                                                    <input type="text" class="form-control form-control-sm" id="rc_vehicle_class" readonly>
+                                                </div>
+                                                <div class="col-md-3 col-sm-6">
+                                                    <small class="text-muted d-block">Registered RTO</small>
+                                                    <input type="text" class="form-control form-control-sm" id="rc_rto" readonly>
+                                                </div>
+                                                <div class="col-md-3 col-sm-6">
+                                                    <small class="text-muted d-block">RC Valid Till</small>
+                                                    <input type="text" class="form-control form-control-sm" id="rc_valid_till" readonly>
+                                                </div>
+                                                <div class="col-md-3 col-sm-6">
+                                                    <small class="text-muted d-block">Insurance Valid Till</small>
+                                                    <input type="text" class="form-control form-control-sm" id="rc_insurance_valid_till" readonly>
+                                                </div>
+                                                <div class="col-md-3 col-sm-6">
+                                                    <small class="text-muted d-block">PUCC Valid Till</small>
+                                                    <input type="text" class="form-control form-control-sm" id="rc_pucc_valid_till" readonly>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -414,7 +410,7 @@
 
         function lockRcField() {
             rcVerified = true;
-            $('#rwc_number').prop('readonly', true);
+            $('#vehicle_number').prop('readonly', true);
             $('#verifyRcBtn')
                 .prop('disabled', true)
                 .removeClass('btn-grd-info')
@@ -486,6 +482,7 @@
             if ((data.reg_no || data.vehicle_number) && !$('#vehicle_number').val()) {
                 $('#vehicle_number').val(data.reg_no || data.vehicle_number);
             }
+            $('#rwc_number').val($('#vehicle_number').val());
 
             let fuelType = (data.type || '').trim().toLowerCase();
             if (fuelType === 'petrol') {
@@ -518,8 +515,9 @@
         }
 
         // Invalidate a previously verified payload if the user edits the
-        // RWC number afterwards, so mismatched data never gets saved.
-        $('#rwc_number').on('input', function() {
+        // vehicle number afterwards, so mismatched data never gets saved.
+        $('#vehicle_number').on('input', function() {
+            $('#rwc_number').val($(this).val());
             if (rcVerified) return;
             $('#rc_verification_data').val('');
             $('#rcVerifiedFieldsWrap').hide();
@@ -545,7 +543,7 @@
         $('#verifyRcBtn').on('click', function() {
             if (rcVerified) return;
 
-            let rwcNumber = $('#rwc_number').val().trim().toUpperCase();
+            let rwcNumber = $('#vehicle_number').val().trim().toUpperCase();
             let $btn = $(this);
             let $status = $('#rcVerifyStatus');
 
@@ -554,10 +552,11 @@
             $('#rcVerifiedFieldsWrap').hide();
 
             if (!rwcNumber) {
-                round_error_noti('Please enter the RWC / registration number first.');
+                round_error_noti('Please enter the vehicle / registration number first.');
                 return;
             }
 
+            $('#vehicle_number').val(rwcNumber);
             $('#rwc_number').val(rwcNumber);
 
             function callVerify(lat, lng) {

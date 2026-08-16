@@ -73,7 +73,7 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
         $driver_details = $delivery->driver->driver;
         $delivery_schedule_shops = $delivery->deliveryScheduleShops;
         $delivery_sender_branch = $delivery->deliveryScheduleShops->first();
-        $delivery_sender_branch = $delivery_sender_branch->branch->branch;
+        $delivery_sender_branch = $delivery_sender_branch?->branch?->branch;
 
         return view('admin.delivery_schedules.tracking_details', compact('delivery', 'driver', 'driver_details', 'delivery_schedule_shops','delivery_sender_branch'));
     }
@@ -331,7 +331,7 @@ $drivers = User::role('Driver')
                 'lr_no'=> $newNumber,
                 'delivery_schedule_id' => $deliverySchedule->id,
                 'shop_id' => $shopId,
-                'sender_branch_id' => $request->branch_id[$index] ?? null,
+                'sender_branch_id' => $request->branch_id[$index] ?: null,
                 'order_serial' => $index + 1,
                 'invoice_no' => $request->invoice_nos[$index] ?? null,
                 'delivery_note' => $request->delivery_notes[$index] ?? null,
@@ -380,7 +380,7 @@ $drivers = User::role('Driver')
         $path = implode('|', $locations);
 
         // return $path;
-        $response = Http::get("https://roads.gomaps.pro/v1/snaptoroads", [
+        $response = Http::get("https://gomaps.pro/v1/snaptoroads", [
             'path' => $path,
             'interpolate' => 'true',
             'key' => $gomapsKey
@@ -509,7 +509,7 @@ $drivers = User::role('Driver')
                 'lr_no'=> $newNumber,
                 'delivery_schedule_id' => $deliverySchedule->id,
                 'shop_id' => $shopId,
-                'sender_branch_id' => $request->branch_id[$index] ?? null,
+                'sender_branch_id' => $request->branch_id[$index] ?: null,
                 'order_serial' => $index + 1,
                 'invoice_no' => $request->invoice_nos[$index] ?? null,
                 'delivery_note' => $request->delivery_notes[$index] ?? null,

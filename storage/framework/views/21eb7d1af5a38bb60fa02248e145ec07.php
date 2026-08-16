@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('title')
+<?php $__env->startSection('title'); ?>
     Delivery Details
-@endsection
-@section('content')
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('content'); ?>
 <style>
     html, body {
         height: 100%;
@@ -39,15 +38,15 @@
                         <!-- Delivery Info -->
                         <div class="mb-4">
                             <h5 class="border-bottom pb-2 fw-bold" style="font-size: 1.2rem;">Delivery Details</h5>
-                            <p class="mb-2"><strong>Date:</strong> {{ $delivery->delivery_date }}</p>
-                            <p class="mb-2"><strong>Status:</strong> {{ ucfirst($delivery->status) }}</p>
+                            <p class="mb-2"><strong>Date:</strong> <?php echo e($delivery->delivery_date); ?></p>
+                            <p class="mb-2"><strong>Status:</strong> <?php echo e(ucfirst($delivery->status)); ?></p>
                         </div>
 
                         <!-- Driver Info -->
                         <div class="mb-4">
                             <h5 class="border-bottom pb-2 fw-bold" style="font-size: 1.2rem;">Driver Info</h5>
-                            <p class="mb-2"><strong>Name:</strong> {{ $driver->name }}</p>
-                            <p class="mb-2"><strong>Phone:</strong> {{ $driver->phone }}</p>
+                            <p class="mb-2"><strong>Name:</strong> <?php echo e($driver->name); ?></p>
+                            <p class="mb-2"><strong>Phone:</strong> <?php echo e($driver->phone); ?></p>
                         </div>
                     </div>
 
@@ -55,57 +54,58 @@
                     <div style="overflow-y: auto; flex: 1; font-size: 1rem; padding-right: 5px;">
                         <h5 class="border-bottom pb-2 fw-bold" style="font-size: 1.2rem;">Shops</h5>
                         <ol class="ps-3">
-                            @foreach($delivery_schedule_shops as $index => $shop)
-                                <li class="mb-4" data-delivery-schedule-shop-id="{{ $shop->id }}" data-shop-id="{{ $shop->shop->id ?? '' }}">
+                            <?php $__currentLoopData = $delivery_schedule_shops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $shop): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <li class="mb-4" data-delivery-schedule-shop-id="<?php echo e($shop->id); ?>" data-shop-id="<?php echo e($shop->shop->id ?? ''); ?>">
                                     <p class="mb-2"><strong>Status : </strong>
                                         <span class="shop-status">
-                                        @if($shop->is_delivered)
+                                        <?php if($shop->is_delivered): ?>
                                             <span class="badge bg-success">Delivered</span>
-                                        @elseif($shop->status === 'rejected')
+                                        <?php elseif($shop->status === 'rejected'): ?>
                                             <span class="badge bg-danger">Rejected</span>
-                                        @elseif($shop->is_accepted)
+                                        <?php elseif($shop->is_accepted): ?>
                                             <span class="badge bg-info text-dark">Accepted</span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="badge bg-warning text-dark">Pending</span>
-                                        @endif
+                                        <?php endif; ?>
                                         </span>
                                     </p>
-                                    <p class="mb-2"><strong>LR No:</strong> {{ $shop->lr_no }}</p>
-                                    <p class="mb-2"><strong>Shop Name:</strong> {{ $shop->shop->shop_name ?? 'N/A' }}</p>
-                                    <p class="mb-2"><strong>Address:</strong> {{ $shop->shop->shop_address ?? 'N/A' }}</p>
-                                    <p class="mb-2"><strong>Contact:</strong> {{ $shop->shop->shop_contact_person_name ?? 'N/A' }}
-                                        ({{ $shop->shop->shop_contact_person_phone ?? '' }})</p>
+                                    <p class="mb-2"><strong>LR No:</strong> <?php echo e($shop->lr_no); ?></p>
+                                    <p class="mb-2"><strong>Shop Name:</strong> <?php echo e($shop->shop->shop_name ?? 'N/A'); ?></p>
+                                    <p class="mb-2"><strong>Address:</strong> <?php echo e($shop->shop->shop_address ?? 'N/A'); ?></p>
+                                    <p class="mb-2"><strong>Contact:</strong> <?php echo e($shop->shop->shop_contact_person_name ?? 'N/A'); ?>
+
+                                        (<?php echo e($shop->shop->shop_contact_person_phone ?? ''); ?>)</p>
                                     <p class="mb-2">
                                         <strong>Location:</strong>
-                                        <a href="https://maps.google.com/?q={{ $shop->shop->shop_latitude }},{{ $shop->shop->shop_longitude }}"
+                                        <a href="https://maps.google.com/?q=<?php echo e($shop->shop->shop_latitude); ?>,<?php echo e($shop->shop->shop_longitude); ?>"
                                         target="_blank" class="text-decoration-none">
                                             View on Map
                                         </a>
                                     </p>
                                     <p class="mb-2">
                                         <strong>Invoice:</strong>
-                                        <a href="{{ route('delivery.invoice', ['deliveryId' => $delivery->id, 'shop_id' => $shop->shop->id]) }}" target="_blank" class="text-decoration-none">
+                                        <a href="<?php echo e(route('delivery.invoice', ['deliveryId' => $delivery->id, 'shop_id' => $shop->shop->id])); ?>" target="_blank" class="text-decoration-none">
                                             Click Here
                                         </a>
                                     </p>
-                                    @if(!empty($shop->products))
+                                    <?php if(!empty($shop->products)): ?>
                                         <div class="mt-2">
                                             <strong>Products:</strong>
                                             <ul class="mb-0">
-                                                @foreach($shop->products as $product)
-                                                    <li>{{ $product->title }} - {{ $product->qty }} {{ $product->unit_or_box }}</li>
-                                                @endforeach
+                                                <?php $__currentLoopData = $shop->products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <li><?php echo e($product->title); ?> - <?php echo e($product->qty); ?> <?php echo e($product->unit_or_box); ?></li>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </ul>
                                         </div>
-                                    @endif
-                                    <div class="mt-2 reject-shop-wrapper" @if($shop->is_delivered || $shop->status === 'rejected') style="display:none;" @endif>
-                                        <button type="button" class="btn btn-sm btn-outline-danger reject-shop" data-delivery-schedule-shop-id="{{ $shop->id }}">
+                                    <?php endif; ?>
+                                    <div class="mt-2 reject-shop-wrapper" <?php if($shop->is_delivered || $shop->status === 'rejected'): ?> style="display:none;" <?php endif; ?>>
+                                        <button type="button" class="btn btn-sm btn-outline-danger reject-shop" data-delivery-schedule-shop-id="<?php echo e($shop->id); ?>">
                                             <i class="fa fa-times"></i> Reject
                                         </button>
                                     </div>
                                     <hr>
                                 </li>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ol>
                     </div>
                 </div>
@@ -115,47 +115,10 @@
         </div>
     </div>
 </div>
-@endsection
-@section('scripts')
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('scripts'); ?>
 <!-- Load GoMaps -->
-{{-- <script src="https://gomaps.pro/maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,geometry"></script>
 
-<script>
-    function initMap() {
-        const driverPos = {
-            lat: parseFloat("{{ $driver_details->latitude }}"),
-            lng: parseFloat("{{ $driver_details->longitude }}")
-        };
-
-        const map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 13,
-            center: driverPos
-        });
-
-        new google.maps.Marker({
-            position: driverPos,
-            map,
-            icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            title: "Driver Location"
-        });
-
-        @foreach($delivery_schedule_shops as $shop)
-            @if(isset($shop->shop->shop_latitude) && isset($shop->shop->shop_longitude))
-                new google.maps.Marker({
-                    position: {
-                        lat: parseFloat("{{ $shop->shop->shop_latitude }}"),
-                        lng: parseFloat("{{ $shop->shop->shop_longitude }}")
-                    },
-                    map,
-                    icon: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-                    title: "Shop ID: {{ $shop->shop_id }}"
-                });
-            @endif
-        @endforeach
-    }
-
-    window.onload = initMap;
-</script> --}}
 
 <script src="https://maps.mapthrust.io/maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,geometry"></script>
 
@@ -164,21 +127,21 @@
     let routeLine;
     let selectedShops = [];
     let shopMarkers = [];
-    let driverLat = {{ $delivery_sender_branch->latitude ?? 22.5059365 }};
-    let driverLng = {{ $delivery_sender_branch->longitude ?? 88.3716779 }};
+    let driverLat = <?php echo e($delivery_sender_branch->latitude ?? 22.5059365); ?>;
+    let driverLng = <?php echo e($delivery_sender_branch->longitude ?? 88.3716779); ?>;
 
-    @foreach($delivery_schedule_shops as $item)
-    @if($item->status !== 'rejected')
+    <?php $__currentLoopData = $delivery_schedule_shops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+    <?php if($item->status !== 'rejected'): ?>
     selectedShops.push({
-        id: {{ $item->shop->id }},
-        deliveryScheduleShopId: {{ $item->id }},
-        name: @json($item->shop->shop_name),
-        lat: parseFloat({{ $item->shop->shop_latitude }}),
-        lng: parseFloat({{ $item->shop->shop_longitude }}),
-        address: @json($item->shop->shop_address),// keep products so you can pre-fill items
+        id: <?php echo e($item->shop->id); ?>,
+        deliveryScheduleShopId: <?php echo e($item->id); ?>,
+        name: <?php echo json_encode($item->shop->shop_name, 15, 512) ?>,
+        lat: parseFloat(<?php echo e($item->shop->shop_latitude); ?>),
+        lng: parseFloat(<?php echo e($item->shop->shop_longitude); ?>),
+        address: <?php echo json_encode($item->shop->shop_address, 15, 512) ?>,// keep products so you can pre-fill items
     });
-    @endif
-    @endforeach
+    <?php endif; ?>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
     function initializeMap() {
         
@@ -377,7 +340,7 @@
             $btn.prop('disabled', true).text('Rejecting...');
 
             $.ajax({
-                url: '{{ route("delivery-schedule.shop.reject", ":id") }}'.replace(':id', deliveryScheduleShopId),
+                url: '<?php echo e(route("delivery-schedule.shop.reject", ":id")); ?>'.replace(':id', deliveryScheduleShopId),
                 method: 'POST',
                 data: {
                     _token: $('meta[name="csrf-token"]').attr('content')
@@ -432,4 +395,6 @@
 
     });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\projects\vlocus\resources\views/admin/delivery_schedules/tracking_details.blade.php ENDPATH**/ ?>

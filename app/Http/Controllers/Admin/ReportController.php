@@ -52,7 +52,7 @@ class ReportController extends Controller implements HasMiddleware
                 $destination = $report->deliver_lat . ',' . $report->deliver_long;
                 $apiKey = env('GOOGLE_MAPS_API_KEY');
 
-                $response = Http::get("https://maps.gomaps.pro/maps/api/distancematrix/json", [
+                $response = Http::get("https://gomaps.pro/maps/api/distancematrix/json", [
                     'origins' => $origin,
                     'destinations' => $destination,
                     'key' => $apiKey
@@ -76,7 +76,7 @@ class ReportController extends Controller implements HasMiddleware
 
                 $response = Http::withHeaders([
                     'Accept' => 'application/json'
-                ])->get('https://maps.gomaps.pro/maps/api/geocode/json', [
+                ])->get('https://gomaps.pro/maps/api/geocode/json', [
                     'latlng' => "$latitude,$longitude",
                     'key' => $apiKey,
                 ]);
@@ -131,7 +131,7 @@ class ReportController extends Controller implements HasMiddleware
             if (count($points) >= 2) {
                 $path = implode('|', $points);
 
-                $response = Http::get("https://maps.gomaps.pro/maps/api/directions/json", [
+                $response = Http::get("https://gomaps.pro/maps/api/directions/json", [
                     'origin' => $points[0],
                     'destination' => end($points),
                     'waypoints' => implode('|', array_slice($points, 1, -1)),

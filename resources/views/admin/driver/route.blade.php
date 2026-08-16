@@ -260,7 +260,7 @@
 
     <!-- Load Google Maps API -->
     <script
-        src="https://maps.gomaps.pro/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&callback=initMap"
+        src="https://gomaps.pro/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&callback=initMap"
         async
         defer>
     </script>

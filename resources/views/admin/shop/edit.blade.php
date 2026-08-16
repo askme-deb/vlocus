@@ -232,7 +232,7 @@
                     return;
                 }
 
-                $.get('https://maps.gomaps.pro/maps/api/place/textsearch/json', {
+                $.get('https://gomaps.pro/maps/api/place/textsearch/json', {
                     key: apiKey,
                     query: query
                 }, function(response) {
@@ -246,7 +246,7 @@
                             var lng = item.geometry?.location?.lng || '';
                             var photoRef = item.photos?.[0]?.photo_reference || '';
                             var photoUrl = photoRef ?
-                                `https://maps.gomaps.pro/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
+                                `https://gomaps.pro/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
                                 '';
 
                             var $option = $(
@@ -308,7 +308,7 @@
                     return;
                 }
 
-                $.get('https://maps.gomaps.pro/maps/api/place/textsearch/json', {
+                $.get('https://gomaps.pro/maps/api/place/textsearch/json', {
                     key: apiKey,
                     query: query
                 }, function(response) {
@@ -324,7 +324,7 @@
                             var lng = item.geometry?.location?.lng || '';
                             var photoRef = item.photos?.[0]?.photo_reference || '';
                             var photoUrl = photoRef ?
-                                `https://maps.gomaps.pro/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
+                                `https://gomaps.pro/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
                                 '';
 
                             var $option = $(

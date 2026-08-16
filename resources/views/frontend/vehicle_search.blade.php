@@ -215,7 +215,7 @@
 
 @section('scripts')
 <!-- Leaflet CSS & JS -->
-<script src="https://maps.gomaps.pro/maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,marker"></script>
+<script src="https://gomaps.pro/maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,marker"></script>
 
 <script>
     let map, directionsService, directionsRenderer;
