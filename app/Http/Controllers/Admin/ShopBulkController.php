@@ -34,12 +34,18 @@ class ShopBulkController extends Controller implements HasMiddleware
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Shop Template');
 
-        // --- Column headers ---
+        // --- Column headers (same fields, same order, as the "Add Shop Details" create form) ---
         $headers = [
             'Shop Name',
+            'Shop Registration Number',
+            'Shop Contact Person Name',
             'Shop Address',
-            'Contact Person Name',
-            'Contact Person Phone (10-digit)',
+            'Shop Contact Person Phone No.',
+            'Street Address',
+            'Pin Code',
+            'District',
+            'State',
+            'Country',
             'Latitude',
             'Longitude',
             'Status',
@@ -69,11 +75,11 @@ class ShopBulkController extends Controller implements HasMiddleware
         // --- Apply validation rules for 200 rows ---
         $totalCols = count($headers);
         for ($i = 2; $i <= 200; $i++) {
-            // Status dropdown
-            $createDropdown("G$i", $statusOptions);
+            // Status dropdown (column M)
+            $createDropdown("M$i", $statusOptions);
 
-            // Contact phone must be a 10-digit number
-            $validation = $sheet->getCell("D$i")->getDataValidation();
+            // Contact phone must be a 10-digit number (column E)
+            $validation = $sheet->getCell("E$i")->getDataValidation();
             $validation->setType(DataValidation::TYPE_WHOLE);
             $validation->setErrorStyle(DataValidation::STYLE_STOP);
             $validation->setAllowBlank(false);
@@ -83,7 +89,7 @@ class ShopBulkController extends Controller implements HasMiddleware
             $validation->setOperator(DataValidation::OPERATOR_BETWEEN);
             $validation->setFormula1(1000000000);
             $validation->setFormula2(9999999999);
-            $sheet->setDataValidation("D$i", $validation);
+            $sheet->setDataValidation("E$i", $validation);
         }
 
         // --- Style headers ---
@@ -140,13 +146,19 @@ class ShopBulkController extends Controller implements HasMiddleware
             $rowNumber = $index + 2; // account for header row
             $row = array_combine($headers, $row->toArray());
 
-            $shopName    = trim($row['Shop Name'] ?? '');
-            $shopAddress = trim($row['Shop Address'] ?? '');
-            $contactName = trim($row['Contact Person Name'] ?? '');
-            $contactPhone = trim($row['Contact Person Phone (10-digit)'] ?? '');
-            $latitude    = $row['Latitude'] ?? null;
-            $longitude   = $row['Longitude'] ?? null;
-            $status      = trim($row['Status'] ?? '');
+            $shopName        = trim($row['Shop Name'] ?? '');
+            $regNumber       = trim($row['Shop Registration Number'] ?? '');
+            $contactName     = trim($row['Shop Contact Person Name'] ?? '');
+            $shopAddress     = trim($row['Shop Address'] ?? '');
+            $contactPhone    = trim($row['Shop Contact Person Phone No.'] ?? '');
+            $streetAddress   = trim($row['Street Address'] ?? '');
+            $pincode         = trim($row['Pin Code'] ?? '');
+            $district        = trim($row['District'] ?? '');
+            $state           = trim($row['State'] ?? '');
+            $country         = trim($row['Country'] ?? '');
+            $latitude        = $row['Latitude'] ?? null;
+            $longitude       = $row['Longitude'] ?? null;
+            $status          = trim($row['Status'] ?? '');
 
             // Skip completely blank rows
             if ($shopName === '' && $shopAddress === '' && $contactName === '' && $contactPhone === '') {
@@ -157,16 +169,20 @@ class ShopBulkController extends Controller implements HasMiddleware
                 $errors[] = "Row {$rowNumber}: Shop Name is required.";
                 continue;
             }
+            if ($regNumber === '') {
+                $errors[] = "Row {$rowNumber}: Shop Registration Number is required.";
+                continue;
+            }
+            if ($contactName === '') {
+                $errors[] = "Row {$rowNumber}: Shop Contact Person Name is required.";
+                continue;
+            }
             if ($shopAddress === '') {
                 $errors[] = "Row {$rowNumber}: Shop Address is required.";
                 continue;
             }
-            if ($contactName === '') {
-                $errors[] = "Row {$rowNumber}: Contact Person Name is required.";
-                continue;
-            }
             if ($contactPhone === '' || !preg_match('/^\d{10}$/', (string) $contactPhone)) {
-                $errors[] = "Row {$rowNumber}: Contact Person Phone must be a valid 10-digit number.";
+                $errors[] = "Row {$rowNumber}: Shop Contact Person Phone No. must be a valid 10-digit number.";
                 continue;
             }
             if ($latitude !== null && $latitude !== '' && !is_numeric($latitude)) {
@@ -193,9 +209,15 @@ class ShopBulkController extends Controller implements HasMiddleware
 
             $shopsToCreate[] = [
                 'shop_name' => $shopName,
-                'shop_address' => $shopAddress,
+                'shop_registration_number' => $regNumber,
                 'shop_contact_person_name' => $contactName,
+                'shop_address' => $shopAddress,
                 'shop_contact_person_phone' => $contactPhone,
+                'shop_street_address' => $streetAddress !== '' ? $streetAddress : null,
+                'shop_pincode' => $pincode !== '' ? $pincode : null,
+                'shop_district' => $district !== '' ? $district : null,
+                'shop_state' => $state !== '' ? $state : null,
+                'shop_country' => $country !== '' ? $country : null,
                 'shop_latitude' => $latitude !== '' ? $latitude : null,
                 'shop_longitude' => $longitude !== '' ? $longitude : null,
                 'is_visible' => $isVisible,
