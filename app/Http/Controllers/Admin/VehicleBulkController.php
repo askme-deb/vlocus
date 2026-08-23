@@ -143,6 +143,9 @@ class VehicleBulkController extends Controller implements HasMiddleware
 
         $errors = [];
         $vehiclesToCreate = [];
+        $vehicleNumbersSeen = [];
+        $rwcNumbersSeen = [];
+        $engineNumbersSeen = [];
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
@@ -186,6 +189,38 @@ class VehicleBulkController extends Controller implements HasMiddleware
             }
             if ($engineNumber === '') {
                 $errors[] = "Row {$rowNumber}: Engine Number is required.";
+                continue;
+            }
+
+            $vehicleNumberKey = strtoupper($vehicleNumber);
+            $rwcNumberKey = strtoupper($rwcNumber);
+            $engineNumberKey = strtoupper($engineNumber);
+
+            // Uniqueness against DB
+            if (Vehicle::where('vehicle_number', $vehicleNumber)->exists()) {
+                $errors[] = "Row {$rowNumber}: Vehicle Number '{$vehicleNumber}' already exists.";
+                continue;
+            }
+            if (Vehicle::where('rwc_number', $rwcNumber)->exists()) {
+                $errors[] = "Row {$rowNumber}: RWC Number '{$rwcNumber}' already exists.";
+                continue;
+            }
+            if (Vehicle::where('engine_number', $engineNumber)->exists()) {
+                $errors[] = "Row {$rowNumber}: Engine Number '{$engineNumber}' already exists.";
+                continue;
+            }
+
+            // Uniqueness within the same file
+            if (isset($vehicleNumbersSeen[$vehicleNumberKey])) {
+                $errors[] = "Row {$rowNumber}: Vehicle Number '{$vehicleNumber}' is duplicated in the file (row {$vehicleNumbersSeen[$vehicleNumberKey]}).";
+                continue;
+            }
+            if (isset($rwcNumbersSeen[$rwcNumberKey])) {
+                $errors[] = "Row {$rowNumber}: RWC Number '{$rwcNumber}' is duplicated in the file (row {$rwcNumbersSeen[$rwcNumberKey]}).";
+                continue;
+            }
+            if (isset($engineNumbersSeen[$engineNumberKey])) {
+                $errors[] = "Row {$rowNumber}: Engine Number '{$engineNumber}' is duplicated in the file (row {$engineNumbersSeen[$engineNumberKey]}).";
                 continue;
             }
 
@@ -253,6 +288,10 @@ class VehicleBulkController extends Controller implements HasMiddleware
                     continue;
                 }
             }
+
+            $vehicleNumbersSeen[$vehicleNumberKey] = $rowNumber;
+            $rwcNumbersSeen[$rwcNumberKey] = $rowNumber;
+            $engineNumbersSeen[$engineNumberKey] = $rowNumber;
 
             $vehiclesToCreate[] = [
                 'name' => $name,

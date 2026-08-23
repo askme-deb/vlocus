@@ -83,9 +83,10 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
         // Fetch only the delivery schedule and the shop we need
         $deliverySchedule = DeliverySchedule::with([
             'driver.driver',
+            'vehicle',
             'deliveryScheduleShops' => function ($query) use ($shop_id) {
                 $query->where('shop_id', $shop_id)
-                    ->with(['shop', 'products','branch']);
+                    ->with(['shop', 'products', 'branch']);
             }
         ])->findOrFail($delivery_id);
 
@@ -102,16 +103,17 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
         $invoiceData = [
             'order_no'        => $shop->invoice_no ?? 'N/A',
             'invoice_no'      => $shop->lr_no ?? 'N/A',
-            'consignor'       => $shop->branch ?? 'N/A',
-            'consignee'       => $shop->shop ?? 'N/A',
+            'consignor'       => $shop->branch,
+            'consignee'       => $shop->shop,
             'products'        => $shop->products->toArray(),
             'total_items'     => $shop->products->count(),
             'item_descriptions' => $shop->products->map(function ($p) {
                 return "{$p->title} ({$p->qty})";
             })->toArray(),
-            'payment_details' => $deliverySchedule->payment_details ?? 'N/A',
+            'payment_type'    => $shop->payment_type ?? $deliverySchedule->payment_type ?? 'N/A',
+            'amount'          => $shop->amount ?? $deliverySchedule->amount ?? 'N/A',
             'delivery_date'   => $deliverySchedule->delivery_date ?? 'N/A',
-            'vehicle'         => $deliverySchedule->vehicle ?? 'N/A',
+            'vehicle'         => $deliverySchedule->vehicle,
             'driver'          => [
                 'name'  => $driver->name ?? 'N/A',
                 'phone' => $driver->phone ?? 'N/A'

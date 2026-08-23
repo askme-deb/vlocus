@@ -185,7 +185,8 @@ td.d-flex .btn:last-child:hover{
 /* Responsive */
 .table-responsive{
     border-radius:16px;
-    overflow:hidden;
+    overflow-x:auto;
+    overflow-y:hidden;
 }
 
 /* Scrollbar */

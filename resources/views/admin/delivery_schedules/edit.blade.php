@@ -2149,6 +2149,8 @@ div#suggestions {
         let routeLine;
         let selectedShops = [];
         let shopMarkers = [];
+        let currentLat = null;
+        let currentLng = null;
         let driverLat = 22.5059365;
         let driverLng = 88.3716779;
 
@@ -2566,10 +2568,10 @@ div#suggestions {
 
             // ✅ Step 6: Sort by Nearest Distance
             $('#sortByNearestBtn').on('click', function() {
-                if (currentLat === null || currentLng === null) {
-                    alert("User location not available yet.");
-                    return;
-                }
+                // Fall back to the driver's registered location when the
+                // browser hasn't granted/resolved live geolocation yet.
+                const originLat = currentLat !== null ? currentLat : driverLat;
+                const originLng = currentLng !== null ? currentLng : driverLng;
 
                 function getDistance(lat1, lon1, lat2, lon2) {
                     const R = 6371; // km
@@ -2587,7 +2589,7 @@ div#suggestions {
                     const $item = $(this);
                     const lat = parseFloat($item.find('input[name="shop_latitudes[]"]').val());
                     const lng = parseFloat($item.find('input[name="shop_longitudes[]"]').val());
-                    const distance = getDistance(currentLat, currentLng, lat, lng);
+                    const distance = getDistance(originLat, originLng, lat, lng);
                     return {
                         element: $item,
                         distance

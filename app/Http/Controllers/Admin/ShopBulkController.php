@@ -141,6 +141,8 @@ class ShopBulkController extends Controller implements HasMiddleware
 
         $errors = [];
         $shopsToCreate = [];
+        $regNumbersSeen = [];
+        $phonesSeen = [];
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // account for header row
@@ -194,6 +196,27 @@ class ShopBulkController extends Controller implements HasMiddleware
                 continue;
             }
 
+            // Uniqueness against DB
+            if (Shop::where('shop_registration_number', $regNumber)->exists()) {
+                $errors[] = "Row {$rowNumber}: Shop Registration Number '{$regNumber}' already exists.";
+                continue;
+            }
+            if (Shop::where('shop_contact_person_phone', $contactPhone)->exists()) {
+                $errors[] = "Row {$rowNumber}: Shop Contact Person Phone No. '{$contactPhone}' already exists.";
+                continue;
+            }
+
+            // Uniqueness within the same file
+            $regNumberKey = strtoupper($regNumber);
+            if (isset($regNumbersSeen[$regNumberKey])) {
+                $errors[] = "Row {$rowNumber}: Shop Registration Number '{$regNumber}' is duplicated in the file (row {$regNumbersSeen[$regNumberKey]}).";
+                continue;
+            }
+            if (isset($phonesSeen[$contactPhone])) {
+                $errors[] = "Row {$rowNumber}: Shop Contact Person Phone No. '{$contactPhone}' is duplicated in the file (row {$phonesSeen[$contactPhone]}).";
+                continue;
+            }
+
             $isVisible = 1;
             if ($status !== '') {
                 $normalizedStatus = strtolower($status);
@@ -206,6 +229,9 @@ class ShopBulkController extends Controller implements HasMiddleware
                     continue;
                 }
             }
+
+            $regNumbersSeen[$regNumberKey] = $rowNumber;
+            $phonesSeen[$contactPhone] = $rowNumber;
 
             $shopsToCreate[] = [
                 'shop_name' => $shopName,

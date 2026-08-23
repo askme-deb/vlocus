@@ -35,12 +35,12 @@
         </div>
         <div style="flex: 1;">
             <div style="font-weight: bold; font-size: 15px; background-color: black; color: white; padding: 5px 0;">
-                {{-- SML FREIGHT SERVICE PVT. LTD. --}} {{ $invoiceData['consignor']->name }}
+                {{ $invoiceData['consignor']->name ?? 'N/A' }}
             </div>
             <div style="font-size: 10px; padding: 5px; line-height: 1.4;">
-                {{ $invoiceData['consignor']->address }}<br>
-                @if(!empty($invoiceData['consignor']->pan_card_number))PAN : {{ $invoiceData['consignor']->pan_card_number }},@endif GST: 19ABCPS4610B1Z1, CIN: U60100WB2021PTC243645<br>
-                PHONE: {{ $invoiceData['consignor']->phone }}, MAIL ID: {{ $invoiceData['consignor']->email }}
+                {{ $invoiceData['consignor']->address ?? 'N/A' }}<br>
+                @if(!empty($invoiceData['consignor']->pan_card_number))PAN : {{ $invoiceData['consignor']->pan_card_number }}<br>@endif
+                PHONE: {{ $invoiceData['consignor']->phone ?? 'N/A' }}, MAIL ID: {{ $invoiceData['consignor']->email ?? 'N/A' }}
             </div>
         </div>
     </div>
@@ -69,13 +69,13 @@
             <td style="text-align:center; border: 2px solid black;">3</td>
             <td style="border: 2px solid black; padding: 10px 5px;">CONSIGNOR DETAILS</td>
             <td style="border: 2px solid black; padding: 10px 5px;">:</td>
-            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['consignor']->name }}</td>
+            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['consignor']->name ?? 'N/A' }}</td>
         </tr>
         <tr>
             <td style="text-align:center; border: 2px solid black;">4</td>
             <td style="border: 2px solid black; padding: 10px 5px;">CONSIGNEE DETAILS</td>
             <td style="border: 2px solid black; padding: 10px 5px;">:</td>
-            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['consignee']->shop_name }}<br>Address : {{ $invoiceData['consignee']->shop_address }}</td>
+            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['consignee']->shop_name ?? 'N/A' }}<br>Address : {{ $invoiceData['consignee']->shop_address ?? 'N/A' }}</td>
         </tr>
         <tr>
             <td style="text-align:center; border: 2px solid black;">5</td>
@@ -100,7 +100,12 @@
             <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['total_items'] }}</td>
         </tr>
         
-        {{-- <tr><td style="text-align:center; border: 2px solid black;">8</td><td style="border: 2px solid black; padding: 10px 5px;">PAYMENT DETAILS</td><td style="border: 2px solid black;">: {{ $invoiceData['payment'] }}</td></tr> --}}
+        <tr>
+            <td style="text-align:center; border: 2px solid black;">8</td>
+            <td style="border: 2px solid black; padding: 10px 5px;">PAYMENT DETAILS</td>
+            <td style="border: 2px solid black; padding: 10px 5px;">:</td>
+            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['payment_type'] }} @if($invoiceData['amount'] !== 'N/A') - Rs. {{ number_format((float) $invoiceData['amount'], 2) }} @endif</td>
+        </tr>
         <tr>
             <td style="text-align:center; border: 2px solid black;">9</td>
             <td style="border: 2px solid black; padding: 10px 5px;">DELIVERY DATE</td>
@@ -111,13 +116,13 @@
             <td style="text-align:center; border: 2px solid black;">10</td>
             <td style="border: 2px solid black; padding: 10px 5px;">VEHICLE DETAILS</td>
             <td style="border: 2px solid black; padding: 10px 5px;">:</td>
-            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['vehicle']->name }} - {{ $invoiceData['vehicle']->vehicle_number }}</td>
+            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['vehicle']->name ?? 'N/A' }} - {{ $invoiceData['vehicle']->vehicle_number ?? 'N/A' }}</td>
         </tr>
         <tr>
             <td style="text-align:center; border: 2px solid black;">11</td>
             <td style="border: 2px solid black; padding: 10px 5px;">DRIVER DETAILS</td>
             <td style="border: 2px solid black; padding: 10px 5px;">:</td>
-            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['driver']['name'] }}</td>
+            <td style="border: 2px solid black; padding: 10px 5px;">{{ $invoiceData['driver']['name'] }} - {{ $invoiceData['driver']['phone'] }}</td>
         </tr>
     </table>
 
@@ -140,12 +145,12 @@
     <!-- Footer Signatures -->
     <div style="display: flex; padding: 10px; font-size: 12px; text-align: center; border-bottom: 2px solid black;">
         <div style="flex: 1;">
-            For SML Freight Service Pvt. Ltd.<br><br>
+            For {{ $invoiceData['consignor']->name ?? 'N/A' }}<br><br>
             <img src="{{ asset('assets/invoice-assets/sign1.png') }}" alt="">
             <div style="margin-top: 5px;">_________________<br>SENDER SIGNATURE</div>
         </div>
         <div style="flex: 1;">
-            For Receiver Details.<br><br>
+            For {{ $invoiceData['consignee']->shop_name ?? 'N/A' }}<br><br>
             <img src="{{ asset('assets/invoice-assets/sign2.png') }}" alt="">
             <div style="margin-top: 5px;">_________________<br>RECEIVER SIGNATURE</div>
         </div>

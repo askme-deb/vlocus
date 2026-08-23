@@ -264,11 +264,10 @@
                         <thead>
                             <tr>
                                 <th>S.l</th>
-                                <th>Shop Number</th>
+                                <th>Registration No.</th>
                                 <th>Name</th>
                                 <th>Image</th>
                                 <th>Address</th>
-                                <th>Registration No.</th>
                                 <th>Contact Person</th>
                                 <th>Contact Number</th>
                                 <th>Location Coordinates</th>
@@ -283,11 +282,10 @@
                                 @foreach ($shops as $item)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                     <td>{{ $item->shop_number }}</td>
+                                    <td>{{ $item->shop_registration_number }}</td>
                                     <td>{{ $item->shop_name }}</td>
                                     <td><img src="{{ $item->getFirstMediaUrl('shop-image') }}" alt="" width="50"></td>
                                     <td>{{ $item->shop_address }}</td>
-                                    <td>{{ $item->shop_registration_number }}</td>
                                     <td>{{ $item->shop_contact_person_name }}</td>
                                     <td>{{ $item->shop_contact_person_phone }}</td>
                                     <td>{{ $item->shop_latitude }}, {{ $item->shop_longitude }}</td>
