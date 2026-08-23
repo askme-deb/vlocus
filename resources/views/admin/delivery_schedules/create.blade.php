@@ -2082,15 +2082,26 @@ div#suggestions {
         let driverLat = 22.5059365;
         let driverLng = 88.3716779;
 
-        @if (auth()->user()->hasRole('Employee'))
-            driverLat = {{ auth()->user()->employee?->branch?->branch?->latitude ?? 22.5059365 }};
-            driverLng = {{ auth()->user()->employee?->branch?->branch?->longitude ?? 88.3716779 }};
-        @endif
+        @php
+            $depotLat = null;
+            $depotLng = null;
 
-        @if (auth()->user()->hasRole('Branch'))
-            driverLat = {{ auth()->user()->branch?->latitude ?? 22.5059365 }};
-            driverLng = {{ auth()->user()->branch?->longitude ?? 88.3716779 }};
-        @endif
+            if (auth()->user()->hasRole('Employee')) {
+                $depotLat = auth()->user()->employee?->branch?->branch?->latitude;
+                $depotLng = auth()->user()->employee?->branch?->branch?->longitude;
+            }
+
+            if (auth()->user()->hasRole('Branch')) {
+                $depotLat = auth()->user()->branch?->latitude;
+                $depotLng = auth()->user()->branch?->longitude;
+            }
+
+            $depotLat = is_numeric($depotLat) ? (float) $depotLat : 22.5059365;
+            $depotLng = is_numeric($depotLng) ? (float) $depotLng : 88.3716779;
+        @endphp
+
+        driverLat = {{ $depotLat }};
+        driverLng = {{ $depotLng }};
 
         function initializeMap() {
 
