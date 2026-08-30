@@ -1,10 +1,8 @@
-@extends('layouts.app')
-
-@section('title')
+<?php $__env->startSection('title'); ?>
     Delivery Schedule
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -15,7 +13,7 @@
 
     <!-- Flatpickr JS -->
 
-    {{-- flatpickr --}}
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -622,9 +620,9 @@ div#suggestions {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <!--breadcrumb-->
     <div class="offcanvas offcanvas-start delivery-note-overlay" tabindex="-1" id="deliveryNote" aria-modal="true"
         role="dialog" style="width: 100%; margin-top:0px;">
@@ -639,10 +637,7 @@ div#suggestions {
             <div class="offcanvas-body" style="position: relative; height: 80vh;  overflow-y: auto;"
                 style="margin-bottom:50px;">
 
-                {{-- <div class="custom-input-wrapper mb-3">
-                    <label class="custom-floating-label">DELIVERY DATE</label>
-                    <input type="text" id="delivery_date" class="form-control custom-input" placeholder="DD/MM/YYYY">
-                </div> --}}
+                
 
                 <div class="custom-input-wrapper mb-3">
                     <label class="custom-floating-label">Invoice No.</label>
@@ -659,22 +654,22 @@ div#suggestions {
                     <label class="custom-floating-label">
                         Booking From
                     </label>
-                    @if (auth()->user()->hasRole('Employee'))
-                        <input type="text" value="{{ auth()->user()->employee?->branch?->name ?? 'N/A' }}"
+                    <?php if(auth()->user()->hasRole('Employee')): ?>
+                        <input type="text" value="<?php echo e(auth()->user()->employee?->branch?->name ?? 'N/A'); ?>"
                             class="form-control custom-input" placeholder="Type here..." readonly>
-                        <input type="hidden" value="{{ auth()->user()->employee?->branch?->id ?? '' }}" name="branch_id"
+                        <input type="hidden" value="<?php echo e(auth()->user()->employee?->branch?->id ?? ''); ?>" name="branch_id"
                             id="branch_id">
-                    @endif
+                    <?php endif; ?>
 
-                    @if (auth()->user()->hasRole('Branch'))
-                        <input type="text" value="{{ auth()->user()->name ?? 'N/A' }}" class="form-control custom-input"
+                    <?php if(auth()->user()->hasRole('Branch')): ?>
+                        <input type="text" value="<?php echo e(auth()->user()->name ?? 'N/A'); ?>" class="form-control custom-input"
                             placeholder="Type here..." readonly>
-                        <input type="hidden" value="{{ auth()->user()->id ?? '' }}" name="branch_id" id="branch_id">
-                    @endif
+                        <input type="hidden" value="<?php echo e(auth()->user()->id ?? ''); ?>" name="branch_id" id="branch_id">
+                    <?php endif; ?>
 
-                    @if (! auth()->user()->hasRole('Employee') && ! auth()->user()->hasRole('Branch'))
+                    <?php if(! auth()->user()->hasRole('Employee') && ! auth()->user()->hasRole('Branch')): ?>
                         <input type="hidden" name="branch_id" id="branch_id" value="">
-                    @endif
+                    <?php endif; ?>
                 </div>
 
                 <div class="custom-input-wrapper mb-3">
@@ -685,21 +680,13 @@ div#suggestions {
                         </a>
                     </label>
                     <input type="text" class="form-control custom-input" id="search_shop_name" name="consignee_details"
-                        placeholder="Type here...">
+                        placeholder="Type here..." autocomplete="off">
                     <div id="suggestions" class="list-group position-absolute z-index-3"
                         style="z-index: 99999; height: 100px; overflow-y: auto; width: 95%;background: white;">
                     </div>
                 </div>
 
-                {{-- <div class="custom-input-wrapper mb-3">
-                    <label class="custom-floating-label">PRODUCTS</label>
-                    <input type="text" class="form-control custom-input" placeholder="Type here...">
-                </div>
-
-                <div class="custom-input-wrapper mb-3">
-                    <label class="custom-floating-label">TOTAL (PCS)</label>
-                    <input type="text" class="form-control custom-input" placeholder="9999999999">
-                </div> --}}
+                
 
                 <div id="productTotalSection" style="display:none;">
                     <div id="product-container">
@@ -721,7 +708,7 @@ div#suggestions {
                     </div>
 
 
-                    {{-- <button type="button" class="btn btn-sm btn-success" onclick="addRow()">+ Add More</button> --}}
+                    
 
                     <div class="custom-input-wrapper mb-3" style="margin-top: 15px;">
                         <label class="custom-floating-label">TOTAL</label>
@@ -729,11 +716,7 @@ div#suggestions {
                     </div>
                 </div>
 
-                {{-- <div class="custom-input-wrapper mb-3">
-                    <label class="custom-floating-label">ITEM DESCRIPTION WITH
-                    (PCS)</label>
-                    <input type="text" class="form-control custom-input" placeholder="Type here...">
-                </div> --}}
+                
 
                 <div class="custom-input-wrapper mb-3">
                     <label class="custom-floating-label">PAYMENT DETAILS</label>
@@ -750,17 +733,9 @@ div#suggestions {
                         placeholder="Enter amount">
                 </div>
 
-                {{-- <div class="custom-input-wrapper mb-3">
-                    <label class="custom-floating-label">VEHICLE DETAILS</label>
-                    <input type="text" class="form-control custom-input" placeholder="Vehicle Details">
-                </div>
+                
 
-                <div class="custom-input-wrapper mb-3">
-                    <label class="custom-floating-label">DRIVER DETAILS</label>
-                    <input type="text" class="form-control custom-input" placeholder="Driver Details">
-                </div> --}}
-
-                {{-- <button type="submit" class="btn btn-primary text-uppercase fw-bold" style="position: fixed; bottom: 0; margin-bottom: 20px;width: 59%; z-index: 555px;">Add Delivery Task</button> --}}
+                
                 <div id="ofcanvus-submit-btn"
                     style="position: fixed; bottom: 0; background: white; padding: 10px 0; z-index: 10; width: 448px;">
                     <button type="submit" class="btn btn-primary text-uppercase fw-bold w-100">
@@ -780,10 +755,10 @@ div#suggestions {
                                 </div> -->
     </div>
 
-    <form class="needs-validation" action="{{ route('delivery-schedule.update', $delivery_Schedule->id) }}" method="post" novalidate enctype="multipart/form-data">
-        @csrf
-        @method('PUT')
-        {{-- <input type="hidden" name="shop_ids" id="shop_ids"> --}}
+    <form class="needs-validation" action="<?php echo e(route('delivery-schedule.store')); ?>" method="post" novalidate
+        enctype="multipart/form-data">
+        <?php echo csrf_field(); ?>
+        
         <div class="d-flex ">
             <!-- Sidebar -->
             <div class="sidebar show" id="sidebar" style="z-index:5">
@@ -798,14 +773,11 @@ div#suggestions {
 
 
                     <div class="mb-2 mt-4">
-                        {{-- <a href="javascript:void(0);" data-bs-toggle="offcanvas" data-bs-target="#deliveryNote"
-                            class="btn-add text-decoration-none text-white">
-                            <i class="bi bi-plus-circle me-1 display-6"></i>
-                        </a> --}}
+                        
                         
                        
                             <input type="text" id="delivery_date" name="delivery_date"
-                                value="{{ old('delivery_date', fromDbDate($delivery_Schedule->delivery_date)) }}" class="form-control" placeholder="DD/MM/YYYY">
+                                value="<?php echo e(old('delivery_date')); ?>" class="form-control" placeholder="DD/MM/YYYY">
                             <div class="invalid-feedback">Please enter a delivery date.</div>
 
 
@@ -820,12 +792,13 @@ div#suggestions {
                                 <option value="" selected disabled>Select Vehicle</option>
 
 
-                                @foreach ($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}"
-                                        {{ old('vehicle_id', $delivery_Schedule->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->name }} | {{ $vehicle->vehicle_number }}
+                                <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($vehicle->id); ?>"
+                                        <?php echo e(old('vehicle_id') == $vehicle->id ? 'selected' : ''); ?>>
+                                        <?php echo e($vehicle->name); ?> | <?php echo e($vehicle->vehicle_number); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 <option value="add_new">➕ Add New Vehicle</option>
                             </select>
                             <div class="invalid-feedback">Please select a vehicle.</div>
@@ -835,12 +808,12 @@ div#suggestions {
                             <select class="form-select single-select-field" name="driver_id" id="driver_id" required>
                                 <option value="" selected disabled>Select Driver</option>
 
-                                @foreach ($drivers as $driver)
-                                    <option value="{{ $driver->id }}"
-                                        {{ old('driver_id', $delivery_Schedule->driver_id) == $driver->id ? 'selected' : '' }}>
-                                        {{ $driver->name }} ({{ $driver->phone }})
+                                <?php $__currentLoopData = $drivers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($driver->id); ?>"
+                                        <?php echo e(old('driver_id') == $driver->id ? 'selected' : ''); ?>>
+                                        <?php echo e($driver->name); ?> (<?php echo e($driver->phone); ?>)
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 <option value="add_new">➕ Add New Driver</option>
                             </select>
                             <div class="invalid-feedback">Please select a driver.</div>
@@ -858,83 +831,7 @@ div#suggestions {
                     </div>
 
                     <!-- Locations -->
-                    {{-- <div id="locations"></div> --}}
-                    <div id="locations">
-
-                        @foreach ($selectedShops as $index => $item)
-                            @php
-                                $shop = $item->shop;
-                            @endphp
-
-                            @if ($shop)
-                            <!-- Reusable location card -->
-                            <div class="d-flex w-100 align-items-start gap-3 mb-3 location-item" data-shop-id="{{ $shop->id }}">
-                                <!-- Step Circle -->
-                                <div class="bg-primary d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                                    style="width: 30px; height: 30px;">
-                                    <p class="text-white m-0 fw-bold">{{ $loop->iteration}}</p>
-                                </div>
-
-                                <!-- Location Box -->
-                                <div class="location-box flex-grow-1 w-100">
-                                    <div class="location-header p-2 d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#location{{ $loop->iteration}}" style="cursor: pointer;">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
-                                            {{ $shop->shop_name }}
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-chevron-down toggle-icon"></i>
-                                            <button type="button" class="btn-icon p-0 remove-location"><i class="bi bi-trash-fill"></i></button>
-                                            <i class="bi bi-pencil-square edit-location"></i>
-                                        </div>
-                                    </div>
-
-                                    <input type="hidden" name="shop_ids[]" value="{{ $shop->id }}">
-                                    <input type="hidden" name="shop_names[]" value="{{ $shop->shop_name }}">
-                                    <input type="hidden" name="shop_addresses[]" value="{{ $shop->shop_address }}">
-                                    <input type="hidden" name="shop_latitudes[]" value="{{ $shop->shop_latitude }}">
-                                    <input type="hidden" name="shop_longitudes[]" value="{{ $shop->shop_longitude }}">
-                                    <input type="hidden" name="branch_id[]" value="{{ auth()->user()->employee?->branch?->id ?? '' }}">
-
-                                    <div class="collapse" id="location{{ $loop->iteration }}">
-                                        <div class="location-content">
-                                            <div class="row g-2 mb-2">
-                                                <div class="col-md-4">
-                                                    <input type="text" name="invoice_nos[]" class="form-control"
-                                                        value="{{ $item->invoice_no }}" placeholder="Enter Invoice">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <select name="payment_types[]" class="form-select">
-                                                        <option value="Pre-Paid" {{ $item->payment_type == 'Pre-Paid' ? 'selected' : '' }}>Pre-Paid</option>
-                                                        <option value="COD" {{ $item->payment_type == 'COD' ? 'selected' : '' }}>COD</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <input type="number" name="amounts[]" class="form-control"
-                                                        value="{{ $item->amount }}" placeholder="0.0">
-                                                </div>
-                                            </div>
-
-                                            @foreach($item->products as $product)
-                                                <div class="item-row">
-                                                    {{ $product->title }} - {{ $product->qty }} {{ ucfirst($product->unit_or_box) }}
-                                                    {{-- <i class="bi bi-pencil float-end"></i> --}}
-                                                </div>
-
-                                                <!-- hidden inputs for backend -->
-                                                <input type="hidden" name="product_titles[{{ $loop->parent->index+1 }}][]" value="{{ $product->title }}">
-                                                <input type="hidden" name="product_qtys[{{ $loop->parent->index+1 }}][]" value="{{ $product->qty }}">
-                                                <input type="hidden" name="product_units[{{ $loop->parent->index+1 }}][]" value="{{ $product->unit_or_box }}">
-                                            @endforeach
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            @endif
-                        @endforeach
-
-                    </div>
+                    <div id="locations"></div>
 
                     <!-- Buttons -->
                     <div class="bottom-button-container">
@@ -971,14 +868,14 @@ div#suggestions {
 
                         <div class="card w-100">
                             <form action="" id="shopCreateForm" class="needs-validation" novalidate>
-                                @csrf
+                                <?php echo csrf_field(); ?>
                                 <div class="card-body">
 
                                     <div class="row">
                                         <div class="mb-3 col-md-6">
                                             <label class="form-label" for="shop_name">Shop Name <span
                                                     class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" value="{{ old('shop_name') }}"
+                                            <input type="text" class="form-control" value="<?php echo e(old('shop_name')); ?>"
                                                 name="shop_name" id="shop_name" placeholder="Enter shop name" required>
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter shop name.</div>
@@ -991,7 +888,7 @@ div#suggestions {
                                             <label class="form-label" for="shop_contact_person_name">Shop Contact Person
                                                 Name <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
-                                                value="{{ old('shop_contact_person_name') }}"
+                                                value="<?php echo e(old('shop_contact_person_name')); ?>"
                                                 name="shop_contact_person_name" id="shop_contact_person_name"
                                                 placeholder="Enter shop contact person name" required>
                                             <div class="valid-feedback">Looks good!</div>
@@ -1002,7 +899,7 @@ div#suggestions {
                                             <label class="form-label" for="shop_address">Shop Address <span
                                                     class="text-danger">*</span></label>
                                             <textarea name="shop_address" id="shop_address" class="form-control" placeholder="Enter shop address"
-                                                id="shop_address" required>{{ old('shop_address') }}</textarea>
+                                                id="shop_address" required><?php echo e(old('shop_address')); ?></textarea>
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter a valid shop address.</div>
 
@@ -1015,7 +912,7 @@ div#suggestions {
                                                 Phone No.
                                                 <span class="text-danger">*</span></label>
                                             <input type="tel" minlength="10" maxlength="10" pattern="[0-9]{10}"
-                                                class="form-control" value="{{ old('shop_contact_person_phone') }}"
+                                                class="form-control" value="<?php echo e(old('shop_contact_person_phone')); ?>"
                                                 name="shop_contact_person_phone" id="shop_contact_person_phone"
                                                 placeholder="Enter shop contact person phone no." required>
                                             <div class="valid-feedback">Looks good!</div>
@@ -1025,7 +922,7 @@ div#suggestions {
                                         <div class="mb-3 col-md-6">
                                             <label class="form-label" for="shop_latitude">Latitude</label>
                                             <input type="text" class="form-control"
-                                                value="{{ old('shop_latitude') }}" name="shop_latitude"
+                                                value="<?php echo e(old('shop_latitude')); ?>" name="shop_latitude"
                                                 id="shop_latitude" placeholder="Enter latitude">
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter latitude.</div>
@@ -1034,7 +931,7 @@ div#suggestions {
                                         <div class="mb-3 col-md-6">
                                             <label class="form-label" for="shop_longitude">Longitude</label>
                                             <input type="text" class="form-control"
-                                                value="{{ old('shop_longitude') }}" name="shop_longitude"
+                                                value="<?php echo e(old('shop_longitude')); ?>" name="shop_longitude"
                                                 id="shop_longitude" placeholder="Enter longitude">
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter longitude.</div>
@@ -1053,7 +950,7 @@ div#suggestions {
                                                 <input type="hidden" name="shop_image_from_google"
                                                     id="shop_image_from_google">
 
-                                                {{-- <img id="shop_preview" src="" alt="Shop Preview" class="img-thumbnail mt-2" style="max-width: 200px; display: none;"> --}}
+                                                
 
                                             </div>
                                         </div>
@@ -1085,7 +982,7 @@ div#suggestions {
     <div class="modal fade" id="addVehicleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <form id="addVehicleForm">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Add New Vehicle</h5>
@@ -1098,7 +995,7 @@ div#suggestions {
                             <div class="mb-3 col-md-6">
                                 <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="name" id="name"
-                                    placeholder="Enter Vehicle Name" value="{{ old('name') }}" required>
+                                    placeholder="Enter Vehicle Name" value="<?php echo e(old('name')); ?>" required>
                                 <div class="valid-feedback">Looks good!</div>
                                 <div class="invalid-feedback">Please enter the vehicle name.</div>
                             </div>
@@ -1109,11 +1006,11 @@ div#suggestions {
                                         class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="vehicle_number" id="vehicle_number"
-                                        placeholder="Enter Vehicle Number" value="{{ old('vehicle_number') }}" required>
+                                        placeholder="Enter Vehicle Number" value="<?php echo e(old('vehicle_number')); ?>" required>
                                     <button type="button" class="btn btn-grd-info text-light" id="modalVerifyRcBtn">Verify</button>
                                 </div>
                                 <small id="modalRcVerifyStatus" class="d-block mt-1"></small>
-                                <input type="hidden" name="rwc_number" id="rwc_number" value="{{ old('rwc_number') }}">
+                                <input type="hidden" name="rwc_number" id="rwc_number" value="<?php echo e(old('rwc_number')); ?>">
                                 <input type="hidden" name="rc_verification_data" id="modal_rc_verification_data">
                                 <div class="valid-feedback">Looks good!</div>
                                 <div class="invalid-feedback">Please enter the vehicle number.</div>
@@ -1124,7 +1021,7 @@ div#suggestions {
                                 <label for="rwc_number" class="form-label">Engine Number <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="engine_number" id="engine_number"
-                                    placeholder="Enter RWC Number" value="{{ old('engine_number') }}" required>
+                                    placeholder="Enter RWC Number" value="<?php echo e(old('engine_number')); ?>" required>
                                 <div class="valid-feedback">Looks good!</div>
                                 <div class="invalid-feedback">Please enter the Engine number.</div>
                             </div>
@@ -1134,9 +1031,9 @@ div#suggestions {
                                 <label for="fuel_type" class="form-label">Fuel Type</label>
 
                                 <select class="form-select" name="fuel_type" id="fuel_type" required>
-                                    <option value="0" {{ old('fuel_type') == '0' ? 'selected' : '' }}>Petrol
+                                    <option value="0" <?php echo e(old('fuel_type') == '0' ? 'selected' : ''); ?>>Petrol
                                     </option>
-                                    <option value="1" {{ old('fuel_type') == '1' ? 'selected' : '' }}>Disel
+                                    <option value="1" <?php echo e(old('fuel_type') == '1' ? 'selected' : ''); ?>>Disel
                                     </option>
                                 </select>
                                 <div class="invalid-feedback">Please enter a valid fuel type.</div>
@@ -1147,11 +1044,11 @@ div#suggestions {
                                         class="text-danger">*</span></label>
                                 <select class="form-select" name="vehicle_type" id="vehicle_type" required>
                                     <option value="" selected>Select Vehicle Type</option>
-                                    @foreach ($vehicle_types as $vehicle_type)
-                                        <option value="{{ $vehicle_type->id }}"
-                                            {{ old('vehicle_type') == $vehicle_type->id ? 'selected' : '' }}>
-                                            {{ $vehicle_type->name }}</option>
-                                    @endforeach
+                                    <?php $__currentLoopData = $vehicle_types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle_type): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($vehicle_type->id); ?>"
+                                            <?php echo e(old('vehicle_type') == $vehicle_type->id ? 'selected' : ''); ?>>
+                                            <?php echo e($vehicle_type->name); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                                 <div class="invalid-feedback">Please select a vehicle type.</div>
                             </div>
@@ -1159,7 +1056,7 @@ div#suggestions {
                             <!-- Description -->
                             <div class="mb-3 col-md-12">
                                 <label for="description" class="form-label">Description</label>
-                                <textarea name="description" id="description" class="form-control" placeholder="Enter Description">{{ old('description') }}</textarea>
+                                <textarea name="description" id="description" class="form-control" placeholder="Enter Description"><?php echo e(old('description')); ?></textarea>
                                 <div class="invalid-feedback">Please enter a valid description.</div>
                             </div>
 
@@ -1185,7 +1082,7 @@ div#suggestions {
     <div class="modal fade" id="addDriverModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <form id="addDriverForm">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Add New Driver</h5>
@@ -1197,44 +1094,36 @@ div#suggestions {
                             <div class="mb-3 col-md-6">
                                 <label class="form-label">First Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" placeholder="Enter First name"
-                                    name="first_name" id="modal_first_name" value="{{ old('first_name') }}" required>
+                                    name="first_name" id="modal_first_name" value="<?php echo e(old('first_name')); ?>" required>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" placeholder="Enter Last name"
-                                    name="last_name" id="modal_last_name" value="{{ old('last_name') }}" required>
+                                    name="last_name" id="modal_last_name" value="<?php echo e(old('last_name')); ?>" required>
                             </div>
                             <div class="mb-3 col-md-4">
                                 <label class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" name="email" id="email"
-                                    value="{{ old('email') }}" required>
+                                    value="<?php echo e(old('email')); ?>" required>
                             </div>
-                            {{-- <div class="mb-3 col-md-4">
-                                <label class="form-label">Password <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="password"
-                                    value="{{ old('password') }}" required>
-                            </div> --}}
+                            
                             <div class="mb-3 col-md-4">
                                 <label class="form-label">Gender <span class="text-danger">*</span></label>
                                 <select class="form-control input-height" name="gender" required>
                                     <option value selected disabled>Select...</option>
-                                    <option value="male" @if (old('gender') == 'male') selected @endif>Male</option>
-                                    <option value="female" @if (old('gender') == 'female') selected @endif>Female
+                                    <option value="male" <?php if(old('gender') == 'male'): ?> selected <?php endif; ?>>Male</option>
+                                    <option value="female" <?php if(old('gender') == 'female'): ?> selected <?php endif; ?>>Female
                                     </option>
-                                    <option value="others" @if (old('gender') == 'others') selected @endif>Others
+                                    <option value="others" <?php if(old('gender') == 'others'): ?> selected <?php endif; ?>>Others
                                     </option>
                                 </select>
                             </div>
                             <div class="mb-3 col-md-4">
                                 <label class="form-label">Mobile No. <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="phone" value="{{ old('phone') }}"
+                                <input type="text" class="form-control" name="phone" value="<?php echo e(old('phone')); ?>"
                                     required>
                             </div>
-                            {{-- <div class="mb-3 col-md-4">
-                                <label class="form-label">Date Of Birth <span class="text-danger"></span></label>
-                                <input type="date" class="form-control" name="date_of_birth"
-                                    value="{{ old('date_of_birth') }}">
-                            </div> --}}
+                            
 
 
                             <div class="mb-3 col-md-4">
@@ -1256,14 +1145,14 @@ div#suggestions {
 
                             <div class="mb-3 col-md-4">
                                 <label class="form-label">Address <span class="text-danger"></span></label>
-                                <input type="text" class="form-control" name="address" id="modal_address" value="{{ old('address') }}">
+                                <input type="text" class="form-control" name="address" id="modal_address" value="<?php echo e(old('address')); ?>">
                             </div>
                             <div class="mb-3 col-md-4">
                                 <label class="form-label">Driving License Number <span
                                         class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="driving_license_number"
-                                        id="modal_driving_license_number" value="{{ old('driving_license_number') }}">
+                                        id="modal_driving_license_number" value="<?php echo e(old('driving_license_number')); ?>">
                                     <button type="button" class="btn btn-grd-info text-light" id="modalVerifyDlBtn">Verify</button>
                                 </div>
                                 <small id="modalDlVerifyStatus" class="d-block mt-1"></small>
@@ -1274,17 +1163,17 @@ div#suggestions {
                                 <label class="form-label">Vehicle Types <span class="text-danger">*</span></label>
                                 <select class="form-control input-height" name="vehicle_type" required>
                                     <option value selected disabled>Select...</option>
-                                    @foreach ($vehicle_types as $item)
-                                        <option value="{{ $item->id }}"
-                                            @if (old('vehicle_type') == $item->id) selected @endif>{{ $item->name }}</option>
-                                    @endforeach
+                                    <?php $__currentLoopData = $vehicle_types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($item->id); ?>"
+                                            <?php if(old('vehicle_type') == $item->id): ?> selected <?php endif; ?>><?php echo e($item->name); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
 
                             <div class="mb-3 col-md-4">
                                 <label class="form-label">Driving Exprience <span class="text-danger"></span></label>
                                 <input type="text" class="form-control" name="driving_exprience"
-                                    value="{{ old('driving_exprience') }}">
+                                    value="<?php echo e(old('driving_exprience')); ?>">
                             </div>
 
                         </div>
@@ -1296,14 +1185,15 @@ div#suggestions {
             </form>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
     <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="{{ asset('assets/dashboard-assets/assets/plugins/select2/js/select2-custom.js') }}"></script>
+    <script src="<?php echo e(asset('assets/dashboard-assets/assets/plugins/select2/js/select2-custom.js')); ?>"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    
+
     <script>
         flatpickr("#delivery_date", {
             dateFormat: "d/m/Y",
@@ -1311,6 +1201,7 @@ div#suggestions {
             closeOnSelect: true,
         });
     </script>
+
     <script>
         // Initialize Flatpickr on the "Add New Driver" modal's DOB input
         const modalDobPicker = flatpickr("#modal_date_of_birth", {
@@ -1324,9 +1215,10 @@ div#suggestions {
         });
     </script>
 
+
     <script>
-        $(document).ready(function () {
-            $("#openDeliveryNoteBtn").on("click", function () {
+        $(document).ready(function() {
+            $("#openDeliveryNoteBtn").on("click", function() {
                 let isValid = true;
 
                 // reset previous invalid states
@@ -1374,7 +1266,7 @@ div#suggestions {
         });
     </script>
 
-    
+
     <script>
         function addRow() {
             const container = document.getElementById('product-container');
@@ -1415,7 +1307,7 @@ div#suggestions {
 
         function bindEvents(row) {
             row.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('input', updateTotal);
+                el.addEventListener('input', updateTotal);
             });
         }
 
@@ -1440,7 +1332,8 @@ div#suggestions {
 
     <script>
         $(document).on('change', '.payment-type', function() {
-            let $amountInput = $(this).closest('.custom-input-wrapper').next('.custom-input-wrapper').find('.amount');
+            let $amountInput = $(this).closest('.custom-input-wrapper').next('.custom-input-wrapper').find(
+                '.amount');
 
             if ($(this).val() === 'Pre-Paid') {
                 $amountInput.val('0.00').prop('readonly', true);
@@ -1459,7 +1352,7 @@ div#suggestions {
                 e.preventDefault();
                 let formData = new FormData(this);
                 $.ajax({
-                    url: '{{ route('delivery-schedule.add_shop') }}',
+                    url: '<?php echo e(route('delivery-schedule.add_shop')); ?>',
                     type: 'POST',
                     data: formData,
                     processData: false,
@@ -1501,7 +1394,7 @@ div#suggestions {
         });
     </script>
 
-    {{-- RC verification for the "Add New Vehicle" modal --}}
+    
     <script>
         let modalRcVerified = false;
 
@@ -1556,7 +1449,7 @@ div#suggestions {
 
             function callVerify(lat, lng) {
                 $.ajax({
-                    url: '{{ route('vehicle.verifyRc') }}',
+                    url: '<?php echo e(route('vehicle.verifyRc')); ?>',
                     type: 'POST',
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content'),
@@ -1636,7 +1529,7 @@ div#suggestions {
         });
     </script>
 
-    {{-- add new vehicle --}}
+    
     <script>
         $(document).ready(function () {
 
@@ -1654,7 +1547,7 @@ div#suggestions {
         let formData = new FormData(this);
 
         $.ajax({
-            url: "{{ route('vehicle.storeFromModal') }}",
+            url: "<?php echo e(route('vehicle.storeFromModal')); ?>",
             type: "POST",
             data: formData,
             processData: false,
@@ -1720,7 +1613,7 @@ div#suggestions {
 
         //         let formData = $(this).serialize();
         //         $.ajax({
-        //             url: "{{ route('vehicle.store') }}", // your store route
+        //             url: "<?php echo e(route('vehicle.store')); ?>", // your store route
         //             type: "POST",
         //             data: formData,
         //             success: function(response) {
@@ -1751,7 +1644,7 @@ div#suggestions {
         // });
     </script>
 
-    {{-- Driving License verification for the "Add New Driver" modal --}}
+    
     <script>
         let modalDlVerified = false;
 
@@ -1817,7 +1710,7 @@ div#suggestions {
 
             function callVerify(lat, lng) {
                 $.ajax({
-                    url: '{{ route('driver.verifyLicense') }}',
+                    url: '<?php echo e(route('driver.verifyLicense')); ?>',
                     type: 'POST',
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content'),
@@ -1899,7 +1792,7 @@ div#suggestions {
         });
     </script>
 
-    {{-- add new driver --}}
+    
     <script>
        $(document).ready(function() {
 
@@ -1915,7 +1808,7 @@ div#suggestions {
         let formData = new FormData(this);
 
         $.ajax({
-            url: "{{ route('driver.storeFromModal') }}",
+            url: "<?php echo e(route('driver.storeFromModal')); ?>",
             type: "POST",
             data: formData,
             processData: false,
@@ -1972,7 +1865,7 @@ div#suggestions {
     </script>
 
     <script>
-        const GOOGLE_MAPS_API_KEY = "{{ env('GOOGLE_MAPS_API_KEY') }}";
+        const GOOGLE_MAPS_API_KEY = "<?php echo e(env('GOOGLE_MAPS_API_KEY')); ?>";
         $(document).ready(function() {
             // var apiKey = "AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl";
             var apiKey = GOOGLE_MAPS_API_KEY;
@@ -1986,7 +1879,7 @@ div#suggestions {
                     return;
                 }
 
-                $.get('https://maps.mapthrust.io/maps/api/place/textsearch/json', {
+                $.get('https://maps.mapthrust.io//maps/api/place/textsearch/json', {
                     key: apiKey,
                     query: query
                 }, function(response) {
@@ -2000,7 +1893,7 @@ div#suggestions {
                             var lng = item.geometry?.location?.lng || '';
                             var photoRef = item.photos?.[0]?.photo_reference || '';
                             var photoUrl = photoRef ?
-                                `https://maps.mapthrust.io/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
+                                `https://maps.mapthrust.io//maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
                                 '';
 
                             var $option = $(
@@ -2064,7 +1957,7 @@ div#suggestions {
                     return;
                 }
 
-                $.get('https://maps.mapthrust.io/maps/api/place/textsearch/json', {
+                $.get('https://maps.mapthrust.io//maps/api/place/textsearch/json', {
                     key: apiKey,
                     query: query
                 }, function(response) {
@@ -2080,7 +1973,7 @@ div#suggestions {
                             var lng = item.geometry?.location?.lng || '';
                             var photoRef = item.photos?.[0]?.photo_reference || '';
                             var photoUrl = photoRef ?
-                                `https://maps.mapthrust.io/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
+                                `https://maps.mapthrust.io//maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` :
                                 '';
 
                             var $option = $(
@@ -2141,7 +2034,7 @@ div#suggestions {
 
 
 
-    <script src="https://maps.mapthrust.io/maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,geometry">
+    <script src="https://maps.mapthrust.io//maps/api/js?key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl&libraries=places,geometry">
     </script>
 
     <script>
@@ -2154,28 +2047,18 @@ div#suggestions {
         let driverLat = 22.5059365;
         let driverLng = 88.3716779;
 
-        @if(auth()->user()->hasRole('Employee'))
-            driverLat = {{ auth()->user()->employee?->branch?->branch?->latitude ?? 22.5059365 }};
-            driverLng = {{ auth()->user()->employee?->branch?->branch?->longitude ?? 88.3716779 }};
-        @endif
+        <?php if(auth()->user()->hasRole('Employee')): ?>
+            driverLat = <?php echo e(auth()->user()->employee?->branch?->branch?->latitude ?? 22.5059365); ?>;
+            driverLng = <?php echo e(auth()->user()->employee?->branch?->branch?->longitude ?? 88.3716779); ?>;
+        <?php endif; ?>
 
-        @if(auth()->user()->hasRole('Branch'))
-            driverLat = {{ auth()->user()->branch?->latitude ?? 22.5059365 }};
-            driverLng = {{ auth()->user()->branch?->longitude ?? 88.3716779 }};
-        @endif
-
-        @foreach($selectedShops as $item)
-        selectedShops.push({
-            id: {{ $item->shop->id }},
-            name: @json($item->shop->shop_name),
-            lat: parseFloat({{ $item->shop->shop_latitude }}),
-            lng: parseFloat({{ $item->shop->shop_longitude }}),
-            address: @json($item->shop->shop_address),// keep products so you can pre-fill items
-        });
-        @endforeach
+        <?php if(auth()->user()->hasRole('Branch')): ?>
+            driverLat = <?php echo e(auth()->user()->branch?->latitude ?? 22.5059365); ?>;
+            driverLng = <?php echo e(auth()->user()->branch?->longitude ?? 88.3716779); ?>;
+        <?php endif; ?>
 
         function initializeMap() {
-            
+
             map = new google.maps.Map(document.getElementById("shopMap"), {
                 center: {
                     lat: driverLat,
@@ -2278,7 +2161,7 @@ div#suggestions {
                 decodedPath.forEach(p => bounds.extend(p));
                 map.fitBounds(bounds);
 
-                google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+                google.maps.event.addListenerOnce(map, "bounds_changed", function() {
                     map.setZoom(12); // closer view
                 });
 
@@ -2381,7 +2264,10 @@ div#suggestions {
 
             allPoints.forEach(point => {
                 const marker = new google.maps.Marker({
-                    position: { lat: point.lat, lng: point.lng },
+                    position: {
+                        lat: point.lat,
+                        lng: point.lng
+                    },
                     map,
                     icon: {
                         path: google.maps.SymbolPath.CIRCLE,
@@ -2395,7 +2281,8 @@ div#suggestions {
                 });
 
                 marker.addListener("click", () => {
-                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${point.lat},${point.lng}`;
+                    const mapsUrl =
+                        `https://www.google.com/maps/search/?api=1&query=${point.lat},${point.lng}`;
                     const content = `
                         <strong>${point.label}</strong><br>
                         ${point.address || ''}<br>
@@ -2415,7 +2302,7 @@ div#suggestions {
             allPoints.forEach(p => bounds.extend(new google.maps.LatLng(p.lat, p.lng)));
             map.fitBounds(bounds);
 
-            google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+            google.maps.event.addListenerOnce(map, "bounds_changed", function() {
                 map.setZoom(12); // closer view
             });
         }
@@ -2445,8 +2332,6 @@ div#suggestions {
                 // alert("Geolocation is not supported by this browser.");
             }
 
-            drawMultiStopRoute();
-
             // ✅ Step 2: Shop search autocomplete
             $input.on('input', function() {
                 const query = $(this).val().trim();
@@ -2455,7 +2340,7 @@ div#suggestions {
                     return;
                 }
 
-                $.get("{{ route('shop.search') }}", {
+                $.get("<?php echo e(route('shop.search')); ?>", {
                     search: query
                 }, function(response) {
                     $suggestions.empty().show();
@@ -2486,7 +2371,7 @@ div#suggestions {
             });
 
             // ✅ Step 3: Add selected shop to list
-            $suggestions.on('click', 'a', function (e) {
+            $suggestions.on('click', 'a', function(e) {
                 e.preventDefault();
                 const data = $(this).data();
                 $('#search_shop_name').val(data.name);
@@ -2496,18 +2381,18 @@ div#suggestions {
                 $('#shop_latitude').val(data.lat);
                 $('#shop_longitude').val(data.lng);
 
-                    $('#productTotalSection').show();
+                $('#productTotalSection').show();
 
-                    selectedShops.push({
-                        id: data.id,
-                        name: data.name,
-                        lat: parseFloat(data.lat),
-                        lng: parseFloat(data.lng),
-                        address: data.address
-                    });
+                selectedShops.push({
+                    id: data.id,
+                    name: data.name,
+                    lat: parseFloat(data.lat),
+                    lng: parseFloat(data.lng),
+                    address: data.address
+                });
 
-                    // showLocationsOnly();
-                    drawMultiStopRoute();
+                // showLocationsOnly();
+                drawMultiStopRoute();
                 //     updateShopSerialNumbers();
                 // }
 
@@ -2515,7 +2400,7 @@ div#suggestions {
                 $suggestions.empty().hide();
             });
 
-            
+
 
 
             // ✅ Step 4: Remove shop from list
@@ -2541,7 +2426,7 @@ div#suggestions {
                                 id: $li.data('id'),
                                 name: $li.find('input[name="shop_names[]"]').val(),
                                 address: $li.find('input[name="shop_addresses[]"]')
-                                .val(),
+                                    .val(),
                                 lat: parseFloat($li.find(
                                     'input[name="shop_latitudes[]"]').val()),
                                 lng: parseFloat($li.find(
@@ -2641,7 +2526,7 @@ div#suggestions {
                 // Rotate icon for feedback
                 $(this).find('i').toggleClass('fa-chevron-down fa-chevron-up');
             });
-            
+
             $(document).on('click', function(e) {
                 const $target = $(e.target);
                 const isInsideRelevantBlock = $target.closest(
@@ -2673,108 +2558,107 @@ div#suggestions {
 
 
         });
-    </script>
 
-    <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
 
-        // Add Delivery Task
-        $("#task-form").on("submit", function (e) {
-            e.preventDefault();
+            // Add Delivery Task
+            $("#task-form").on("submit", function(e) {
+                e.preventDefault();
 
-            let isValid = true;
+                let isValid = true;
 
-            // Reset invalid states
-            $("#task-form .form-control, #task-form .form-select").removeClass("is-invalid");
+                // Reset invalid states
+                $("#task-form .form-control, #task-form .form-select").removeClass("is-invalid");
 
-            // Get values
-            let orderNo = $('input[name="invoice_no"]').val().trim();
-            let consignee = $('#search_shop_name').val().trim();
-            let paymentType = $('select[name="payment_type"]').val();
-            let amount = $('input[name="amount"]').val().trim();
-            let shop_id = $("#shop_id").val();
-            let shop_name = $("#shop_name").val();
-            let shop_addresse = $("#shop_addresse").val();
-            let shop_latitude = $("#shop_latitude").val();
-            let shop_longitude = $("#shop_longitude").val();
-            let branch_id = $("#branch_id").val();
+                // Get values
+                let orderNo = $('input[name="invoice_no"]').val().trim();
+                let consignee = $('#search_shop_name').val().trim();
+                let paymentType = $('select[name="payment_type"]').val();
+                let amount = $('input[name="amount"]').val().trim();
+                let shop_id = $("#shop_id").val();
+                let shop_name = $("#shop_name").val();
+                let shop_addresse = $("#shop_addresse").val();
+                let shop_latitude = $("#shop_latitude").val();
+                let shop_longitude = $("#shop_longitude").val();
+                let branch_id = $("#branch_id").val();
 
-            // Validate fields
-            if (orderNo === "") {
-                $('input[name="invoice_no"]').addClass("is-invalid");
-                isValid = false;
-            }
-            if (consignee === "") {
-                $('#search_shop_name').addClass("is-invalid");
-                isValid = false;
-            }
-            if (!paymentType) {
-                $('select[name="payment_type"]').addClass("is-invalid");
-                isValid = false;
-            }
-            if (amount === "") {
-                $('input[name="amount"]').addClass("is-invalid");
-                isValid = false;
-            }
-
-            $(".product-title").each(function () {
-                if ($.trim($(this).val()) === "") {
-                    $(this).addClass("is-invalid");
+                // Validate fields
+                if (orderNo === "") {
+                    $('input[name="invoice_no"]').addClass("is-invalid");
                     isValid = false;
-                } else {
-                    $(this).removeClass("is-invalid");
                 }
-            });
-
-            // Validate product rows
-            let hasValidProduct = false;
-            $("#product-container .product-row").each(function () {
-                let title = $(this).find(".product-title").val().trim();
-                let qty = $(this).find(".product-qty").val();
-                let unit = $(this).find(".product-unit").val();
-
-                if (title !== "" && qty > 0 && unit !== "") {
-                    hasValidProduct = true;
-                } else {
-                    if (title === "") $(this).find(".product-title").addClass("is-invalid");
-                    if (qty <= 0 || qty === "") $(this).find(".product-qty").addClass("is-invalid");
-                    if (unit === "") $(this).find(".product-unit").addClass("is-invalid");
+                if (consignee === "") {
+                    $('#search_shop_name').addClass("is-invalid");
+                    isValid = false;
                 }
-            });
+                if (!paymentType) {
+                    $('select[name="payment_type"]').addClass("is-invalid");
+                    isValid = false;
+                }
+                if (amount === "") {
+                    $('input[name="amount"]').addClass("is-invalid");
+                    isValid = false;
+                }
 
-            if (!hasValidProduct) {
-                isValid = false;
-            }
+                $(".product-title").each(function() {
+                    if ($.trim($(this).val()) === "") {
+                        $(this).addClass("is-invalid");
+                        isValid = false;
+                    } else {
+                        $(this).removeClass("is-invalid");
+                    }
+                });
 
-            // If invalid, stop here (don’t close offcanvas)
-            if (!isValid) {
-                return false;
-            }
+                // Validate product rows
+                let hasValidProduct = false;
+                $("#product-container .product-row").each(function() {
+                    let title = $(this).find(".product-title").val().trim();
+                    let qty = $(this).find(".product-qty").val();
+                    let unit = $(this).find(".product-unit").val();
 
-            // ✅ If valid → close offcanvas
-            $(".btn-close[data-bs-dismiss='offcanvas']").trigger("click");
+                    if (title !== "" && qty > 0 && unit !== "") {
+                        hasValidProduct = true;
+                    } else {
+                        if (title === "") $(this).find(".product-title").addClass("is-invalid");
+                        if (qty <= 0 || qty === "") $(this).find(".product-qty").addClass(
+                            "is-invalid");
+                        if (unit === "") $(this).find(".product-unit").addClass("is-invalid");
+                    }
+                });
 
-            // Count locations
-            let locationCount = $("#locations .location-box").length + 1;
+                if (!hasValidProduct) {
+                    isValid = false;
+                }
 
-            // Products HTML
-            let productsHTML = "";
-            let productInputs = "";
-            $("#product-container .product-row").each(function () {
-                let title = $(this).find(".product-title").val().trim();
-                let qty = $(this).find(".product-qty").val();
-                let unit = $(this).find(".product-unit").val();
+                // If invalid, stop here (don’t close offcanvas)
+                if (!isValid) {
+                    return false;
+                }
 
-                productsHTML += `<div class="item-row">${title} - ${qty} ${unit}</div>`;
-                productInputs += `
+                // ✅ If valid → close offcanvas
+                $(".btn-close[data-bs-dismiss='offcanvas']").trigger("click");
+
+                // Count locations
+                let locationCount = $("#locations .location-box").length + 1;
+
+                // Products HTML
+                let productsHTML = "";
+                let productInputs = "";
+                $("#product-container .product-row").each(function() {
+                    let title = $(this).find(".product-title").val().trim();
+                    let qty = $(this).find(".product-qty").val();
+                    let unit = $(this).find(".product-unit").val();
+
+                    productsHTML += `<div class="item-row">${title} - ${qty} ${unit}</div>`;
+                    productInputs += `
                     <input type="hidden" name="product_titles[${locationCount}][]" value="${title}">
                     <input type="hidden" name="product_qtys[${locationCount}][]" value="${qty}">
                     <input type="hidden" name="product_units[${locationCount}][]" value="${unit}">
                 `;
-            });
+                });
 
-            // Location HTML
-            let locationHTML = `
+                // Location HTML
+                let locationHTML = `
             <div class="d-flex w-100 align-items-start gap-3 mb-3 location-item" data-shop-id="${shop_id}">
                 <div class="bg-primary d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
                     style="width: 30px; height: 30px;">
@@ -2832,15 +2716,15 @@ div#suggestions {
                 </a>
             </div>`;
 
-            // Append to locations
-            $("#locations").append(locationHTML);
+                // Append to locations
+                $("#locations").append(locationHTML);
 
-            toggleSearchBar();
+                toggleSearchBar();
 
-            // Reset form
-            this.reset();
-            $('#productTotalSection').hide();
-            $("#product-container").html(`
+                // Reset form
+                this.reset();
+                $('#productTotalSection').hide();
+                $("#product-container").html(`
                 <div class="product-row">
                     <input type="text" placeholder="Title" class="product-title form-control custom-input">
                     <select class="product-unit form-select custom-input">
@@ -2856,55 +2740,55 @@ div#suggestions {
                     </button>
                 </div>
             `);
-            bindEvents(document.querySelector('.product-row'));
-        });
+                bindEvents(document.querySelector('.product-row'));
+            });
 
-        // Remove invalid state on change
-        $(document).on("input change", ".form-control, .form-select", function () {
-            $(this).removeClass("is-invalid");
-        });
-
-
-        $(document).on("click", ".remove-location", function () {
-            const id = $(this).closest(".d-flex.w-100.align-items-start")
-                            .find("input[name='shop_ids[]']").val();
-            
-            $(this).closest(".d-flex.w-100.align-items-start").remove();
-            
-            selectedShops = selectedShops.filter(s => s.id != id);
-            // updateShopSerialNumbers();
-            drawMultiStopRoute();
-        });
+            // Remove invalid state on change
+            $(document).on("input change", ".form-control, .form-select", function() {
+                $(this).removeClass("is-invalid");
+            });
 
 
-        $(document).on("click", ".edit-location", function () {
-            let locationBox = $(this).closest(".location-box");
+            $(document).on("click", ".remove-location", function() {
+                const id = $(this).closest(".d-flex.w-100.align-items-start")
+                    .find("input[name='shop_ids[]']").val();
 
-            // Get data from inside the location
-            let orderNo = locationBox.find('input[placeholder="Enter Invoice"]').val();
-            let paymentType = locationBox.find("select.form-select").val();
-            let amount = locationBox.find('input[type="number"]').val();
+                $(this).closest(".d-flex.w-100.align-items-start").remove();
 
-            let consignor = locationBox.find(".location-header div:first").text().trim();
-            let shop_id = locationBox.find('input[name="shop_ids[]"]').val();
+                selectedShops = selectedShops.filter(s => s.id != id);
+                // updateShopSerialNumbers();
+                drawMultiStopRoute();
+            });
 
-            // Populate back to form
-            $('input[name="invoice_no"]').val(orderNo);
-            $("#search_shop_name").val(consignor);
-            $('select[name="payment_type"]').val(paymentType);
-            $('input[name="amount"]').val(amount);
-            $("#shop_id").val(shop_id);
 
-            // Products
-            let productContainer = $("#product-container").empty();
-            locationBox.find(".item-row").each(function () {
-                let parts = $(this).text().trim().split(" - ");
-                let title = parts[0];
-                let qtyUnit = parts[1].split(" ");
-                let qty = qtyUnit[0];
-                let unit = qtyUnit[1];
+            $(document).on("click", ".edit-location", function() {
+                let locationBox = $(this).closest(".location-box");
 
-                productContainer.append(`
+                // Get data from inside the location
+                let orderNo = locationBox.find('input[placeholder="Enter Invoice"]').val();
+                let paymentType = locationBox.find("select.form-select").val();
+                let amount = locationBox.find('input[type="number"]').val();
+
+                let consignor = locationBox.find(".location-header div:first").text().trim();
+                let shop_id = locationBox.find('input[name="shop_ids[]"]').val();
+
+                // Populate back to form
+                $('input[name="invoice_no"]').val(orderNo);
+                $("#search_shop_name").val(consignor);
+                $('select[name="payment_type"]').val(paymentType);
+                $('input[name="amount"]').val(amount);
+                $("#shop_id").val(shop_id);
+
+                // Products
+                let productContainer = $("#product-container").empty();
+                locationBox.find(".item-row").each(function() {
+                    let parts = $(this).text().trim().split(" - ");
+                    let title = parts[0];
+                    let qtyUnit = parts[1].split(" ");
+                    let qty = qtyUnit[0];
+                    let unit = qtyUnit[1];
+
+                    productContainer.append(`
                     <div class="product-row">
                         <input type="text" value="${title}" placeholder="Title" class="product-title form-control custom-input">
                         <select class="product-unit form-select custom-input">
@@ -2920,40 +2804,40 @@ div#suggestions {
                         </button>
                     </div>
                 `);
-            });
+                });
 
-            // Remove the old location (we'll re-add after form submit)
-            locationBox.closest(".d-flex.w-100.align-items-start").remove();
-            // ✅ Change button text
-            $("#ofcanvus-submit-btn button[type='submit']").text("Edit Delivery Task");
+                // Remove the old location (we'll re-add after form submit)
+                locationBox.closest(".d-flex.w-100.align-items-start").remove();
+                // ✅ Change button text
+                $("#ofcanvus-submit-btn button[type='submit']").text("Edit Delivery Task");
 
-            // ✅ Change close button to submit
-            $(".btn-close[data-bs-dismiss='offcanvas']").hide();
+                // ✅ Change close button to submit
+                $(".btn-close[data-bs-dismiss='offcanvas']").hide();
                 // .attr("data-bs-dismiss", "") // remove dismiss attribute
                 // .attr("type", "submit")      // make it submit button
                 // .attr("id", "editSubmitBtn") // optional: give ID for tracking
                 // .off("click");               // remove default close behavior
 
-            $("#edit-submit-close-btn").show();
+                $("#edit-submit-close-btn").show();
 
-            // ✅ Prevent closing on backdrop
-            var deliveryNote = new bootstrap.Offcanvas('#deliveryNote', {
-                backdrop: 'static',
-                keyboard: false
+                // ✅ Prevent closing on backdrop
+                var deliveryNote = new bootstrap.Offcanvas('#deliveryNote', {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                deliveryNote.show();
+
+                // var deliveryNote = new bootstrap.Offcanvas('#deliveryNote');
+                // deliveryNote.show();
+                $('#productTotalSection').show();
+                updateTotal();
             });
-            deliveryNote.show();
-
-            // var deliveryNote = new bootstrap.Offcanvas('#deliveryNote');
-            // deliveryNote.show();
-            $('#productTotalSection').show();
-            updateTotal();
-        });
 
 
 
-        // Add Product Row
-        // window.addRow = function () {
-        //     $("#product-container").append(`
+            // Add Product Row
+            // window.addRow = function () {
+            //     $("#product-container").append(`
         //         <div class="product-row">
         //             <input type="text" placeholder="Product Title" class="product-title form-control custom-input">
         //             <select class="product-unit form-select custom-input">
@@ -2969,58 +2853,59 @@ div#suggestions {
         //             </button>
         //         </div>
         //     `);
-        // };
+            // };
 
-        // Remove Location
-        $(document).on("click", ".remove-location", function () {
-            $(this).closest(".d-flex").remove();
+            // Remove Location
+            $(document).on("click", ".remove-location", function() {
+                $(this).closest(".d-flex").remove();
+            });
+
+            $("#locations").sortable({
+                items: ".location-item", // Make only location-item draggable
+                handle: ".location-header", // Only drag from the header area
+                placeholder: "sortable-placeholder", // Placeholder style
+                tolerance: "pointer",
+                start: function(e, ui) {
+                    ui.placeholder.height(ui.item.height());
+                },
+                stop: function() {
+                    // Update the numbering after reorder
+                    $("#locations .location-item").each(function(index) {
+                        $(this).find(".bg-primary p").text(index + 1);
+                    });
+
+                    // Rebuild selectedShops array based on new order
+                    let newOrder = [];
+                    $("#locations .location-item").each(function() {
+                        const id = $(this).data("shop-id");
+                        const shop = selectedShops.find(s => s.id == id);
+                        if (shop) newOrder.push(shop);
+                    });
+                    selectedShops = newOrder;
+
+                    // Redraw route based on the new order
+                    drawMultiStopRoute();
+                }
+            });
+
+
         });
-
-        $("#locations").sortable({
-            items: ".location-item",                // Make only location-item draggable
-            handle: ".location-header",             // Only drag from the header area
-            placeholder: "sortable-placeholder",    // Placeholder style
-            tolerance: "pointer",
-            start: function (e, ui) {
-                ui.placeholder.height(ui.item.height());
-            },
-            stop: function () {
-                // Update the numbering after reorder
-                $("#locations .location-item").each(function (index) {
-                    $(this).find(".bg-primary p").text(index + 1);
-                });
-
-                // Rebuild selectedShops array based on new order
-                let newOrder = [];
-                $("#locations .location-item").each(function () {
-                    const id = $(this).data("shop-id");
-                    const shop = selectedShops.find(s => s.id == id);
-                    if (shop) newOrder.push(shop);
-                });
-                selectedShops = newOrder;
-
-                // Redraw route based on the new order
-                drawMultiStopRoute();
-            }
-        });
-
-
-    });
     </script>
 
-    {{-- search in div id="locations" --}}
+    
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             // Show search bar only if #locations is not empty
             toggleSearchBar();
 
             // When typing in the search box
-            $("#searchShop").on("keyup", function () {
+            $("#searchShop").on("keyup", function() {
                 let searchText = $(this).val().toLowerCase();
                 // console.log(searchText);
 
-                $("#locations > .d-flex").each(function () {
-                    let shopName = $(this).find(".location-header div.d-flex:first").text().toLowerCase();
+                $("#locations > .d-flex").each(function() {
+                    let shopName = $(this).find(".location-header div.d-flex:first").text()
+                        .toLowerCase();
 
                     if (shopName.indexOf(searchText) > -1) {
                         // console.log(shopName);
@@ -3043,7 +2928,7 @@ div#suggestions {
                 $("#searchWrapper").hide();
             }
         }
-
     </script>
+<?php $__env->stopSection(); ?>
 
-@endsection
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\projects\vlocus\resources\views/admin/delivery_schedules/create.blade.php ENDPATH**/ ?>

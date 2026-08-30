@@ -1,10 +1,8 @@
-@extends('layouts.app')
-
-@section('title')
+<?php $__env->startSection('title'); ?>
     Vehicle Tracking
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
 <style>
     .vehicle-list-container {
         height: 400px;
@@ -522,25 +520,11 @@ div#search-container {
 
     
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <!--breadcrumb-->
-    {{-- <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-        <div class="breadcrumb-title pe-3">Live Vehicle Tracking</div>
-        <div class="ps-3">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0 p-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('dashboard') }}">
-                            <i class="bx bx-home-alt"></i>
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">Tracking</li>
-                </ol>
-            </nav>
-        </div>
-    </div> --}}
+    
     <!--end breadcrumb-->
 
     <div class="card mt-3">
@@ -559,8 +543,8 @@ div#search-container {
                         
                         <!-- Vehicle List (initially visible) -->
                         <div class="vehicle-list-container" id="vehicle-list">
-                            @foreach ($drivers as $driver)
-                            @php
+                            <?php $__currentLoopData = $drivers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $current_active_delivery = $driver->currentActiveDelivery;
                                 // if($current_active_delivery){
                                 //     dd($current_active_delivery);
@@ -571,73 +555,38 @@ div#search-container {
                                 $driver_lng = $driver->driver?->longitude ?? $driver->driver?->latestLocation?->longitude;
                                 $has_rejected_shop = $current_active_delivery?->deliveryScheduleShops?->contains('status', 'rejected') ?? false;
                                 $is_rejected = $has_rejected_shop || ($current_active_delivery->status ?? '') === 'rejected';
-                            @endphp
-                            {{-- @php $driver_vehicle = getDriverDetails($driver->id)->vehicle; @endphp --}}
+                            ?>
+                            
                             <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 vehicle-item"
-                                 data-id="{{ $driver_vehicle->id ?? null }}"
-                                 data-driver-id="{{ $driver->id ?? null }}"
-                                 data-lat="{{ $driver_lat }}"
-                                 data-lng="{{ $driver_lng }}"
-                                 data-name="{{ $driver_vehicle->name ?? null }}"
-                                 data-vehicle-number="{{ $driver_vehicle->vehicle_number ?? null }}"
-                                 data-driver-name="{{ $driver->name }}"
-                                 data-driver-phone="{{ $driver->phone }}"
-                                 data-status="{{ $driver->driver?->ride_mode == 1 ? 'Online' : 'Offline' }}"
-                                 data-running-status="{{ !empty($driver_vehicle) == 1 ? 'Running' : 'Idle' }}"
-                                 data-delivery-status="{{ $is_rejected ? 'rejected' : ($current_active_delivery->status ?? '') }}"
-                                 data-last-updated="{{ optional($driver_vehicle?->updated_at)?->diffForHumans() ?? 'N/A' }}">
+                                 data-id="<?php echo e($driver_vehicle->id ?? null); ?>"
+                                 data-driver-id="<?php echo e($driver->id ?? null); ?>"
+                                 data-lat="<?php echo e($driver_lat); ?>"
+                                 data-lng="<?php echo e($driver_lng); ?>"
+                                 data-name="<?php echo e($driver_vehicle->name ?? null); ?>"
+                                 data-vehicle-number="<?php echo e($driver_vehicle->vehicle_number ?? null); ?>"
+                                 data-driver-name="<?php echo e($driver->name); ?>"
+                                 data-driver-phone="<?php echo e($driver->phone); ?>"
+                                 data-status="<?php echo e($driver->driver?->ride_mode == 1 ? 'Online' : 'Offline'); ?>"
+                                 data-running-status="<?php echo e(!empty($driver_vehicle) == 1 ? 'Running' : 'Idle'); ?>"
+                                 data-delivery-status="<?php echo e($is_rejected ? 'rejected' : ($current_active_delivery->status ?? '')); ?>"
+                                 data-last-updated="<?php echo e(optional($driver_vehicle?->updated_at)?->diffForHumans() ?? 'N/A'); ?>">
                                 <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ $driver_vehicle->name ?? null }}</h6>
+                                    <h6 class="mb-1"><?php echo e($driver_vehicle->name ?? null); ?></h6>
                                     <div class="status">
-                                        <span class="dash-lable mb-0 bg-{{ $driver->driver?->ride_mode == 1 ? 'success' : 'danger' }} bg-opacity-10 text-{{ $driver->driver?->ride_mode == 1 ? 'success' : 'danger' }} rounded-2">{{ $driver->driver?->ride_mode == 1 ? 'Online' : 'Offline' }}</span>
-                                        <span class="dash-lable mb-0 bg-{{ !empty($driver_vehicle) ? 'success' : 'danger' }} bg-opacity-10 text-{{ !empty($driver_vehicle) ? 'success' : 'danger' }} rounded-2">{{ !empty($driver_vehicle) ? 'Running' : 'Idle' }}</span>
-                                        @if($is_rejected)
+                                        <span class="dash-lable mb-0 bg-<?php echo e($driver->driver?->ride_mode == 1 ? 'success' : 'danger'); ?> bg-opacity-10 text-<?php echo e($driver->driver?->ride_mode == 1 ? 'success' : 'danger'); ?> rounded-2"><?php echo e($driver->driver?->ride_mode == 1 ? 'Online' : 'Offline'); ?></span>
+                                        <span class="dash-lable mb-0 bg-<?php echo e(!empty($driver_vehicle) ? 'success' : 'danger'); ?> bg-opacity-10 text-<?php echo e(!empty($driver_vehicle) ? 'success' : 'danger'); ?> rounded-2"><?php echo e(!empty($driver_vehicle) ? 'Running' : 'Idle'); ?></span>
+                                        <?php if($is_rejected): ?>
                                             <span class="dash-lable mb-0 bg-danger bg-opacity-10 text-danger rounded-2">Rejected</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
-                                <p class="mb-1">Driver: {{ $driver->name }} ({{ $driver->phone }})</p>
-                                <p class="mb-1">Vehicle Number: {{ $driver_vehicle->vehicle_number ?? 'N/A' }}</p>
-                                <small>Last updated: <span class="update-time">{{ $driver->updated_at->diffForHumans() }}</span></small>
+                                <p class="mb-1">Driver: <?php echo e($driver->name); ?> (<?php echo e($driver->phone); ?>)</p>
+                                <p class="mb-1">Vehicle Number: <?php echo e($driver_vehicle->vehicle_number ?? 'N/A'); ?></p>
+                                <small>Last updated: <span class="update-time"><?php echo e($driver->updated_at->diffForHumans()); ?></span></small>
                             </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                            {{-- @foreach ($drivers as $driver)
-                                @php 
-                                    $current_active_delivery = $driver->currentActiveDelivery;
-                                    // if($current_active_delivery){
-                                    //     dd($current_active_delivery);
-
-                                    // }
-                                    $driver_vehicle = $current_active_delivery?->vehicle; // use null-safe operator
-                                @endphp
-
-                                <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 vehicle-item" 
-                                    data-id="{{ $driver_vehicle->id ?? '' }}"
-                                    data-driver-id="{{ $driver->id }}"
-                                    data-lat="{{ $driver->latitude ?? '' }}" 
-                                    data-lng="{{ $driver->longitude ?? '' }}"
-                                    data-name="{{ $driver_vehicle->name ?? 'N/A' }}"
-                                    data-vehicle-number="{{ $driver_vehicle->vehicle_number ?? 'N/A' }}"
-                                    data-driver-name="{{ $driver->user->name ?? 'N/A' }}"
-                                    data-driver-phone="{{ $driver->user->phone ?? 'N/A' }}"
-                                    data-status="{{ $driver->driver?->ride_mode == 1 ? 'Online' : 'Offline' }}"
-                                    data-last-updated="{{ $driver_vehicle?->updated_at?->diffForHumans() ?? 'N/A' }}">
-                                    
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ $driver->name ?? 'No Active Delivery' }}</h6>
-                                        <span class="dash-lable mb-0 bg-{{ $driver->driver?->ride_mode == 1 ? 'success' : 'danger' }} bg-opacity-10 text-{{ $driver->driver?->ride_mode == 1 ? 'success' : 'danger' }} rounded-2">
-                                            {{ $driver->driver?->ride_mode == 1 ? 'Online' : 'Offline' }}
-                                        </span>
-                                    </div>
-
-                                    <p class="mb-1">Driver: {{ $driver->user->name ?? 'N/A' }} ({{ $driver->user->phone ?? 'N/A' }})</p>
-                                    <p class="mb-1">
-                                        Vehicle Number: {{ $driver_vehicle->vehicle_number ?? 'N/A' }}
-                                    </p>
-                                    <small>Last updated: <span class="update-time">{{ $driver->updated_at->diffForHumans() }}</span></small>
-                                </div>
-                            @endforeach --}}
+                            
                         </div>
                         
                         <!-- Driver Details Container (initially hidden) -->
@@ -672,8 +621,7 @@ div#search-container {
                                     
                                     <div id="current-task-info"></div>
                                     
-                                    {{-- <h6 class="mt-3">Delivery Route</h6>
-                                    <div id="route-steps" class="route-steps-container"></div> --}}
+                                    
                                 </div>
                             </div>
                         </div>
@@ -747,9 +695,9 @@ div#search-container {
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
@@ -864,7 +812,7 @@ div#search-container {
 </script>
 <script>
     // Global variables
-    const GOOGLE_MAPS_API_KEY = "{{ env('GOOGLE_MAPS_API_KEY') }}";
+    const GOOGLE_MAPS_API_KEY = "<?php echo e(env('GOOGLE_MAPS_API_KEY')); ?>";
     let map;
     let markers = [];
     let liveUpdateInterval;
@@ -909,11 +857,11 @@ div#search-container {
             
             truckIcons = {
                 Online: {
-                    url: "{{ asset('assets/dashboard-assets/assets/images/pickup-truck.png') }}",
+                    url: "<?php echo e(asset('assets/dashboard-assets/assets/images/pickup-truck.png')); ?>",
                     scaledSize: new google.maps.Size(40, 40)
                 },
                 Offline: {
-                    url: "{{ asset('assets/dashboard-assets/assets/images/pickup-truck.png') }}",
+                    url: "<?php echo e(asset('assets/dashboard-assets/assets/images/pickup-truck.png')); ?>",
                     scaledSize: new google.maps.Size(40, 40),
                     opacity: 0.6
                 }
@@ -1502,7 +1450,7 @@ div#search-container {
             position: startLocation,
             map: map,
             icon: {
-                url: "{{ asset('assets/dashboard-assets/assets/images/pickup-truck.png') }}",
+                url: "<?php echo e(asset('assets/dashboard-assets/assets/images/pickup-truck.png')); ?>",
                 scaledSize: new google.maps.Size(40, 40)
             },
             title: "Driver Position"
@@ -2107,7 +2055,7 @@ div#search-container {
     // Helper function to get appropriate vehicle icon
     function getVehicleIcon(status) {
         return {
-            url: "{{ asset('assets/dashboard-assets/assets/images/pickup-truck.png') }}",
+            url: "<?php echo e(asset('assets/dashboard-assets/assets/images/pickup-truck.png')); ?>",
             scaledSize: new google.maps.Size(40, 40),
             opacity: status === 'Online' ? 1 : 0.6
         };
@@ -2152,4 +2100,5 @@ div#search-container {
         clearInterval(liveUpdateInterval);
     });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\projects\vlocus\resources\views/admin/tracking/index.blade.php ENDPATH**/ ?>
