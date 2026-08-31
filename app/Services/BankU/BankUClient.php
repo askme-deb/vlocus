@@ -6,6 +6,7 @@ use App\Services\BankU\DataTransferObjects\BankUResponse;
 use App\Services\BankU\Exceptions\BankUConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 
@@ -15,7 +16,6 @@ class BankUClient
         private readonly string $baseUrl,
         private readonly string $clientId,
         private readonly string $clientSecret,
-        private readonly string $environment,
         private readonly int $timeout,
         private readonly int $connectTimeout,
         private readonly int $retryTimes,
@@ -26,14 +26,20 @@ class BankUClient
     /**
      * Send a POST request to a BankU reseller API endpoint.
      *
+     * BankU requires an Idempotency-Key header on every request. A fresh key
+     * is generated per call; automatic retries reuse the same PendingRequest
+     * (and therefore the same key), which is the exact-retry behaviour BankU
+     * expects. Never pass the Client Secret or Encryption Key as the key.
+     *
      * @throws BankUConnectionException
      */
-    public function post(string $endpoint, array $payload): BankUResponse
+    public function post(string $endpoint, array $payload, ?string $idempotencyKey = null): BankUResponse
     {
         $url = $this->endpointUrl($endpoint);
+        $idempotencyKey ??= (string) Str::uuid();
 
         try {
-            $response = $this->pendingRequest()->post($url, $payload);
+            $response = $this->pendingRequest($idempotencyKey)->post($url, $payload);
         } catch (ConnectionException $e) {
             Log::error('BankU API connection error', [
                 'endpoint' => $endpoint,
@@ -54,13 +60,14 @@ class BankUClient
         return BankUResponse::fromArray($response->status(), (array) $response->json());
     }
 
-    private function pendingRequest(): PendingRequest
+    private function pendingRequest(string $idempotencyKey): PendingRequest
     {
         return Http::withHeaders([
             'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
             'X-Client-Id' => $this->clientId,
             'X-Client-Secret' => $this->clientSecret,
-            'X-BankU-Environment' => $this->environment,
+            'Idempotency-Key' => $idempotencyKey,
         ])
             ->timeout($this->timeout)
             ->connectTimeout($this->connectTimeout)

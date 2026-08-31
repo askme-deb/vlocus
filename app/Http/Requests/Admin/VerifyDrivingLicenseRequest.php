@@ -19,8 +19,6 @@ class VerifyDrivingLicenseRequest extends FormRequest
         return [
             'driving_license_number' => ['required', 'string'],
             'dob' => ['required', 'date'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
         ];
     }
 }

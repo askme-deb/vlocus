@@ -17,7 +17,6 @@ class BankUServiceProvider extends ServiceProvider
                 baseUrl: $config['base_url'],
                 clientId: $config['client_id'],
                 clientSecret: $config['client_secret'],
-                environment: $config['environment'],
                 timeout: (int) $config['timeout'],
                 connectTimeout: (int) $config['connect_timeout'],
                 retryTimes: (int) $config['retry_times'],

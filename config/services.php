@@ -36,11 +36,11 @@ return [
     ],
 
     'banku' => [
-        'base_url' => env('BANKU_BASE_URL', 'https://erp.banku.co.in'),
+        'base_url' => env('BANKU_BASE_URL', 'https://app.banku.co.in'),
         'client_id' => env('BANKU_CLIENT_ID'),
         'client_secret' => env('BANKU_CLIENT_SECRET'),
+        // Verifies signed BankU webhook events. Never send it as an Idempotency-Key.
         'encryption_key' => env('BANKU_ENCRYPTION_KEY'),
-        'environment' => env('BANKU_ENVIRONMENT', 'production'),
         'timeout' => env('BANKU_TIMEOUT', 15),
         'connect_timeout' => env('BANKU_CONNECT_TIMEOUT', 5),
         'retry_times' => env('BANKU_RETRY_TIMES', 1),

@@ -1554,15 +1554,13 @@ div#suggestions {
             $('#vehicle_number').val(rwcNumber);
             $('#rwc_number').val(rwcNumber);
 
-            function callVerify(lat, lng) {
+            function callVerify() {
                 $.ajax({
                     url: '{{ route('vehicle.verifyRc') }}',
                     type: 'POST',
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content'),
                         vehicle_registration_number: rwcNumber,
-                        latitude: lat,
-                        longitude: lng,
                     },
                     beforeSend: function() {
                         $btn.prop('disabled', true).text('Verifying...');
@@ -1619,20 +1617,7 @@ div#suggestions {
                 });
             }
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        callVerify(position.coords.latitude, position.coords.longitude);
-                    },
-                    function() {
-                        callVerify(28.6139, 77.2090);
-                    }, {
-                        timeout: 3000
-                    }
-                );
-            } else {
-                callVerify(28.6139, 77.2090);
-            }
+            callVerify();
         });
     </script>
 
@@ -1815,7 +1800,7 @@ div#suggestions {
                 return;
             }
 
-            function callVerify(lat, lng) {
+            function callVerify() {
                 $.ajax({
                     url: '{{ route('driver.verifyLicense') }}',
                     type: 'POST',
@@ -1823,8 +1808,6 @@ div#suggestions {
                         _token: $('meta[name="csrf-token"]').attr('content'),
                         driving_license_number: dlNumber,
                         dob: dob,
-                        latitude: lat,
-                        longitude: lng,
                     },
                     beforeSend: function() {
                         $btn.prop('disabled', true).text('Verifying...');
@@ -1882,20 +1865,7 @@ div#suggestions {
                 });
             }
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        callVerify(position.coords.latitude, position.coords.longitude);
-                    },
-                    function() {
-                        callVerify(28.6139, 77.2090);
-                    }, {
-                        timeout: 3000
-                    }
-                );
-            } else {
-                callVerify(28.6139, 77.2090);
-            }
+            callVerify();
         });
     </script>
 

@@ -88,8 +88,6 @@ class VehicleController extends Controller implements HasMiddleware
         try {
             $result = $this->bankUIdentityService->verifyRc(
                 $request->string('vehicle_registration_number'),
-                (float) $request->input('latitude', 28.6139),
-                (float) $request->input('longitude', 77.209),
             );
         } catch (BankUConnectionException $e) {
             return $this->bankUUnavailableResponse();

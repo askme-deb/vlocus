@@ -18,8 +18,6 @@ class VerifyRcRequest extends FormRequest
     {
         return [
             'vehicle_registration_number' => ['required', 'string'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
         ];
     }
 }

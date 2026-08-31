@@ -280,8 +280,6 @@ public function storeFromModal(Request $request)
             $result = $this->bankUIdentityService->verifyDrivingLicense(
                 $request->string('driving_license_number'),
                 $request->string('dob'),
-                (float) $request->input('latitude', 28.6139),
-                (float) $request->input('longitude', 77.209),
             );
         } catch (BankUConnectionException $e) {
             return $this->bankUUnavailableResponse();

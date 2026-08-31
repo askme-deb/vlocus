@@ -3,11 +3,12 @@
 namespace App\Services\BankU;
 
 use App\Services\BankU\DataTransferObjects\BankUResponse;
+use Illuminate\Support\Str;
 
 /**
  * Domain-facing wrapper around BankU's reseller identity verification APIs.
  *
- * @see https://erp.banku.co.in (BankU Identity Verification APIs collection)
+ * @see https://app.banku.co.in/api/reseller/v1/ (BankU Reseller Identity Verification APIs)
  */
 class BankUIdentityService
 {
@@ -37,44 +38,20 @@ class BankUIdentityService
         ]);
     }
 
-    public function verifyRc(string $vehicleRegistrationNumber, float $latitude, float $longitude): BankUResponse
+    public function verifyRc(string $vehicleRegistrationNumber, ?string $verificationId = null): BankUResponse
     {
         return $this->client->post('/api/reseller/v1/identity/rc/verify', [
             'vehicleRegistrationNumber' => $vehicleRegistrationNumber,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'consent' => 'Y',
+            'verification_id' => $verificationId ?? ('rc_' . Str::uuid()),
         ]);
     }
 
-    public function verifyPassport(string $passportFileNumber, string $dob, float $latitude, float $longitude): BankUResponse
-    {
-        return $this->client->post('/api/reseller/v1/identity/passport/verify', [
-            'passportFileNumber' => $passportFileNumber,
-            'dob' => $dob,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-        ]);
-    }
-
-    public function verifyVoterId(string $voterId, float $latitude, float $longitude): BankUResponse
-    {
-        return $this->client->post('/api/reseller/v1/identity/voter-id/verify', [
-            'voterId' => $voterId,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'consent' => 'Y',
-        ]);
-    }
-
-    public function verifyDrivingLicense(string $drivingLicenseNumber, string $dob, float $latitude, float $longitude): BankUResponse
+    public function verifyDrivingLicense(string $drivingLicenseNumber, string $dob, ?string $verificationId = null): BankUResponse
     {
         return $this->client->post('/api/reseller/v1/identity/driving-license/verify', [
             'drivingLicenseNumber' => $drivingLicenseNumber,
             'dob' => $dob,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'consent' => 'Y',
+            'verification_id' => $verificationId ?? ('dl_' . Str::uuid()),
         ]);
     }
 

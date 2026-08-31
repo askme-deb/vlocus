@@ -69,19 +69,19 @@
                             <label class="col-md-3 col-form-label">Verified License Details</label>
                             <div class="col-md-9">
                                 <div class="row g-2">
-                                    <div class="col-md-6">
+                                    <div class="col-12">
                                         <small class="text-muted d-block">Issuing State</small>
                                         <input type="text" class="form-control form-control-sm" id="dl_state" readonly>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12">
                                         <small class="text-muted d-block">Valid Till</small>
                                         <input type="text" class="form-control form-control-sm" id="dl_valid_till" readonly>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12">
                                         <small class="text-muted d-block">Vehicle Class</small>
                                         <input type="text" class="form-control form-control-sm" id="dl_vehicle_class" readonly>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12">
                                         <small class="text-muted d-block">Father / Husband Name</small>
                                         <input type="text" class="form-control form-control-sm" id="dl_guardian_name" readonly>
                                     </div>
@@ -651,7 +651,7 @@
                 return;
             }
 
-            function callVerify(lat, lng) {
+            function callVerify() {
                 $.ajax({
                     url: '{{ route('driver.verifyLicense') }}',
                     type: 'POST',
@@ -659,8 +659,6 @@
                         _token: $('meta[name="csrf-token"]').attr('content'),
                         driving_license_number: dlNumber,
                         dob: dob,
-                        latitude: lat,
-                        longitude: lng,
                     },
                     beforeSend: function() {
                         $btn.prop('disabled', true).text('Verifying...');
@@ -727,20 +725,7 @@
                 });
             }
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        callVerify(position.coords.latitude, position.coords.longitude);
-                    },
-                    function() {
-                        callVerify(28.6139, 77.2090);
-                    }, {
-                        timeout: 3000
-                    }
-                );
-            } else {
-                callVerify(28.6139, 77.2090);
-            }
+            callVerify();
         });
     </script>
     <script>
