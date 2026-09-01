@@ -68,13 +68,111 @@ class VehicleController extends Controller implements HasMiddleware
 
     public function create()
     {
+        return view('admin.vehicle.create');
+    }
 
-        $vehicle_types= VehicleType::where('is_visible',1)->get();
-        $brands = Brand::where('is_visible',1)->get();
+    /**
+     * Column names populated from the BankU RC verify response. Shared by the
+     * create/edit forms, validation and persistence so the three stay in sync.
+     *
+     * @return array<int, string>
+     */
+    private function rcFieldKeys(): array
+    {
+        return [
+            'rc_status', 'vehicle_class', 'chassis_number', 'engine_number',
+            'manufacturer', 'model_name', 'colour', 'fuel_type', 'emission_norm',
+            'owner_name', 'registration_date', 'rc_expiry_date', 'tax_upto',
+            'insurance_company', 'insurance_upto', 'financer', 'owner_address',
+            'cubic_capacity', 'gross_weight', 'seat_capacity', 'sleeper_capacity',
+            'pucc_number', 'pucc_upto', 'permit_type', 'permit_valid_upto',
+            'national_permit_number', 'national_permit_upto',
+        ];
+    }
 
-        $colors= Color::where('is_visible',1)->get();
+    /**
+     * Translate a raw BankU RC verify payload into our column => value map.
+     * Mirrors the client-side RC_FIELD_MAP used by the full create/edit form;
+     * used server-side by the quick-add modal, which only posts the raw
+     * payload rather than one hidden input per column.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function rcColumnsFromPayload(array $payload): array
+    {
+        $map = [
+            'rc_status'              => ['rc_status', 'status'],
+            'vehicle_class'          => ['class', 'vehicle_class', 'vehicle_category_description'],
+            'chassis_number'         => ['chassis', 'chassis_number', 'chassis_no'],
+            'engine_number'          => ['engine', 'engine_number', 'engine_no'],
+            'manufacturer'           => ['vehicle_manufacturer_name', 'maker_description', 'manufacturer', 'maker'],
+            'model_name'             => ['model', 'maker_model', 'vehicle_model'],
+            'colour'                 => ['vehicle_colour', 'colour', 'color'],
+            'fuel_type'              => ['type', 'fuel_type', 'fuel_descr', 'fuel'],
+            'emission_norm'          => ['norms_type', 'emission_norm', 'norms_desc', 'norms'],
+            'owner_name'             => ['owner', 'owner_name'],
+            'registration_date'      => ['registration_date', 'reg_date', 'rc_regn_dt'],
+            'rc_expiry_date'         => ['rc_expiry_date', 'fit_up_to', 'rc_expiry', 'expiry_date'],
+            'tax_upto'               => ['tax_upto', 'vehicle_tax_upto', 'tax_up_to'],
+            'insurance_company'      => ['vehicle_insurance_company_name', 'insurance_company', 'vehicle_insurance', 'insurance_comp'],
+            'insurance_upto'         => ['vehicle_insurance_upto', 'insurance_upto', 'insurance_validity'],
+            'financer'               => ['financer', 'financier', 'rc_financer'],
+            'owner_address'          => ['present_address', 'permanent_address', 'address', 'owner_address', 'c_address'],
+            'cubic_capacity'         => ['cubic_capacity', 'vehicle_cubic_capacity', 'cc'],
+            'gross_weight'           => ['gross_vehicle_weight', 'vehicle_gross_weight', 'gross_weight', 'gvw'],
+            'seat_capacity'          => ['vehicle_seat_capacity', 'seating_capacity', 'seat_capacity'],
+            'sleeper_capacity'       => ['vehicle_sleeper_capacity', 'sleeper_capacity', 'sleeper_cap'],
+            'pucc_number'            => ['pucc_number', 'pucc_no'],
+            'pucc_upto'              => ['pucc_upto', 'pucc_valid_upto', 'pucc_validity'],
+            'permit_type'            => ['permit_type'],
+            'permit_valid_upto'      => ['permit_valid_upto', 'permit_validity', 'permit_upto'],
+            'national_permit_number' => ['national_permit_number', 'national_permit_no'],
+            'national_permit_upto'   => ['national_permit_upto', 'national_permit_validity'],
+        ];
 
-        return view('admin.vehicle.create',compact('vehicle_types','brands','colors'));
+        $columns = [];
+        foreach ($map as $column => $keys) {
+            foreach ($keys as $key) {
+                $value = $payload[$key] ?? null;
+                if (is_scalar($value) && trim((string) $value) !== '') {
+                    $columns[$column] = trim((string) $value);
+                    break;
+                }
+            }
+        }
+
+        if (array_key_exists('is_commercial', $payload)) {
+            $columns['is_commercial'] = filter_var($payload['is_commercial'], FILTER_VALIDATE_BOOLEAN);
+        } elseif (isset($columns['vehicle_class'])
+            && preg_match('/LGV|LMV-CARGO|GOODS|TRANSPORT|COMMERCIAL|MAXI|TRAILER/i', $columns['vehicle_class'])) {
+            $columns['is_commercial'] = true;
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Build the validation rules for the create/edit forms: the registration
+     * number is the only required field, everything else is optional so a
+     * partial RC lookup can still be saved and completed by hand.
+     *
+     * @return array<string, string>
+     */
+    private function rcValidationRules(): array
+    {
+        $rules = [
+            'vehicle_number' => 'required|string|max:255',
+            'owner_address'  => 'nullable|string|max:1000',
+            'is_commercial'  => 'nullable|boolean',
+            'is_visible'     => 'nullable|boolean',
+        ];
+
+        foreach ($this->rcFieldKeys() as $key) {
+            $rules[$key] ??= 'nullable|string|max:255';
+        }
+
+        return $rules;
     }
     public function getModels($brand_id)
     {
@@ -98,10 +196,9 @@ class VehicleController extends Controller implements HasMiddleware
 public function storeFromModal(Request $request)
 {
     $validator = Validator::make($request->all(), [
-        'name'            => 'required|string|max:255',
         'vehicle_number'  => 'required|string|max:255',
-        'rwc_number'      => 'required|string|max:255',
-        'engine_number'   => 'required|string|max:255',
+        'name'            => 'nullable|string|max:255',
+        'engine_number'   => 'nullable|string|max:255',
         'fuel_type'       => 'nullable',
         'vehicle_type'    => 'nullable|exists:vehicle_types,id',
         'description'     => 'nullable|string',
@@ -115,18 +212,30 @@ public function storeFromModal(Request $request)
         ], 422);
     }
 
-    $vehicleData = [
-        'name'            => $request->name,
-        'company_id'      => auth()->user()->companyId(),
-        'vehicle_number'  => $request->vehicle_number,
-        'rwc_number'      => $request->rwc_number,
-        'engine_number'   => $request->engine_number,
-        'fuel_type'       => $request->fuel_type,
-        'vehicle_type'    => $request->vehicle_type,
-        'description'     => $request->description,
-    ];
+    $vehicleNumber = strtoupper(trim((string) $request->input('vehicle_number')));
 
+    // RC lookup (when the modal's "Verify" step succeeded) supplies the base
+    // set of columns; anything the user typed in the modal then overrides it.
     $rcVerificationData = $this->decodeVerificationPayload($request, 'rc_verification_data');
+    $vehicleData = $rcVerificationData !== null
+        ? $this->rcColumnsFromPayload($rcVerificationData)
+        : [];
+
+    foreach (['engine_number', 'fuel_type', 'vehicle_type', 'description'] as $field) {
+        if ($request->filled($field)) {
+            $vehicleData[$field] = $request->input($field);
+        }
+    }
+
+    $vehicleData['company_id']     = auth()->user()->companyId();
+    $vehicleData['vehicle_number'] = $vehicleNumber;
+    $vehicleData['rwc_number']     = $vehicleNumber;
+    $vehicleData['is_visible']     = 1;
+    $vehicleData['name']           = $request->filled('name')
+        ? $request->input('name')
+        : (trim(($vehicleData['manufacturer'] ?? '') . ' ' . ($vehicleData['model_name'] ?? ''))
+            ?: $vehicleNumber);
+
     if ($rcVerificationData !== null) {
         $vehicleData['rc_verification_data'] = $rcVerificationData;
         $vehicleData['rc_verified_at'] = now();
@@ -151,51 +260,14 @@ public function storeFromModal(Request $request)
 }
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'             => 'required|string|max:255',
-            'vehicle_number'   => 'required|string|max:255',
-            'rwc_number'       => 'required|string|max:255',
-            'engine_number'    => 'required|string|max:255',
-            'brand_id'         => 'required',
-            'model_id'         => 'nullable|exists:models,id',
-            'color_id'         => 'nullable|exists:colors,id',
-            'body_type'        => 'nullable|string|max:255',
-            'vehicle_condition'=> 'nullable|string|max:255',
-            'transmisssion'    => 'nullable|string|max:255',
-            'fuel_type'        => 'nullable|string|max:255',
-            'left_hand_drive'  => 'required|boolean',
-            'hybird'           => 'required|boolean',
-            'engine_type'      => 'nullable|string|max:255',
-            'description'      => 'nullable|string|max:255',
-            'vehicle_type'     => 'nullable|exists:vehicle_types,id',
-            'ac_status'        => 'nullable',
-            'seat_booking_price'=>'nullable',
-        ]);
+        $validator = Validator::make($request->all(), $this->rcValidationRules());
+
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator->errors())->withInput();
         }
 
-        $data=[
-            'name'             => $request->name,
-            'company_id'       => auth()->user()->companyId(),
-            'vehicle_number'   => $request->vehicle_number,
-            'rwc_number'       => $request->rwc_number,
-            'engine_number'    => $request->engine_number,
-            'brand_id'         => $request->brand_id,
-            'model_id'         => $request->model_id,
-            'color_id'         => $request->color_id,
-            'body_type'        => $request->body_type,
-            'vehicle_condition'=> $request->vehicle_condition,
-            'transmisssion'    => $request->transmisssion,
-            'fuel_type'        => $request->fuel_type,
-            'left_hand_drive'  => $request->left_hand_drive,
-            'hybird'           => $request->hybird,
-            'engine_type'      => $request->engine_type,
-            'description'      => $request->description,
-            'is_visible'       => $request->is_visible,
-            'vehicle_type'         => $request->vehicle_type,
-            'ac_status'        => $request->ac_status,
-        ];
+        $data = $this->rcFormData($request);
+        $data['company_id'] = auth()->user()->companyId();
 
         $rcVerificationData = $this->decodeVerificationPayload($request, 'rc_verification_data');
         if ($rcVerificationData !== null) {
@@ -203,116 +275,79 @@ public function storeFromModal(Request $request)
             $data['rc_verified_at'] = now();
         }
 
-        $authUser = auth()->user();
-
-
         $vehicle = Vehicle::create($data);
 
-        if ($request->hasFile('image')) {
-            $vehicle->addMedia($request->file('image'))->toMediaCollection('vehicles');
+        if ($vehicle->id) {
+            return redirect()->route('vehicle.index')->with(['success' => 'Vehicle Created Successfully']);
         }
 
-        $vehicle->update();
-
-        if($vehicle->id){
-            return redirect()->route('vehicle.index')->with(['success'=>'Vehicle Created Successfully']);
-        }else{
-            return back()->with(['error'=>'Vehicle Not Created']);
-        }
+        return back()->with(['error' => 'Vehicle Not Created']);
     }
 
-    public function show(Vehicle $vehicle)
+    /**
+     * Map the submitted RC form into a column => value array for persistence.
+     * `name` is mirrored from the registration number so listings and the
+     * other modules that still read `vehicles.name` keep working.
+     */
+    private function rcFormData(Request $request): array
     {
-        //
+        $data = $request->only(array_merge($this->rcFieldKeys(), ['vehicle_number', 'owner_address']));
+
+        $data['vehicle_number'] = strtoupper(trim((string) $request->input('vehicle_number')));
+        $data['name'] = $data['vehicle_number'];
+        $data['rwc_number'] = $data['vehicle_number'];
+        $data['is_commercial'] = $request->filled('is_commercial')
+            ? (bool) $request->boolean('is_commercial')
+            : null;
+        $data['is_visible'] = $request->filled('is_visible') ? (int) $request->boolean('is_visible') : 1;
+
+        return $data;
+    }
+
+    public function show($id)
+    {
+        $query = Vehicle::query();
+
+        if ($companyId = auth()->user()->companyId()) {
+            $query->where('company_id', $companyId);
+        }
+
+        $vehicle = $query->findOrFail($id);
+
+        return view('admin.vehicle.show', ['data' => $vehicle]);
     }
 
     public function edit($id)
     {
-        $data =  Vehicle::findOrFail($id);
+        $data = Vehicle::findOrFail($id);
 
-        $vehicle_types= VehicleType::where('is_visible',1)->get();
-        $brands = Brand::where('is_visible',1)->get();
-        $colors= Color::where('is_visible',1)->get();
-        $models = Models::where('is_visible',1)->get();
-
-        return view('admin.vehicle.edit',compact('data','vehicle_types','brands','colors','models'));
-
+        return view('admin.vehicle.edit', compact('data'));
     }
 
     public function update(Request $request)
     {
-
-        // echo "<pre>";
-
-        // die;
-        // Validate the incoming request data
-        $validator = Validator::make($request->all(), [
-            'name'             => 'required|string|max:255',
-            'vehicle_number'   => 'required|string|max:255',
-            'rwc_number'       => 'required|string|max:255',
-            'engine_number'    => 'required|string|max:255',
-            'brand_id'         => 'required',
-            'model_id'         => 'nullable|exists:models,id',
-            'color_id'         => 'nullable|exists:colors,id',
-            'body_type'        => 'nullable|string|max:255',
-            'vehicle_condition'=> 'required|string|max:255',
-            'engine_type'      => 'required|string|max:255',
-            'transmisssion'    => 'required|string|max:255',
-            'fuel_type'        => 'required|string|max:255',
-            'left_hand_drive'  => 'required|boolean',
-            'hybird'           => 'required|boolean',
-            'is_visible'       => 'nullable|boolean',
-            'image'            => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'description'      => 'nullable|string|max:255',
-            'layout_id'          => 'nullable|exists:vehicle_layouts,id',
-            'vehicle_type'          => 'nullable|exists:vehicle_types,id',
-            'ac_status'        => 'nullable',
-            'route_id'         =>'nullable|exists:routes,id',
-            'seat_booking_price'=>'nullable',
+        $validator = Validator::make($request->all(), $this->rcValidationRules() + [
+            'id' => 'required|exists:vehicles,id',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Retrieve the vehicle record using the id from the request (adjust if using a route parameter)
         $vehicle = Vehicle::findOrFail($request->id);
+        $vehicle->fill($this->rcFormData($request));
 
-        // Update the vehicle with corresponding fields
-        $vehicle->name             = $request->name;
-        $vehicle->vehicle_number   = $request->vehicle_number;
-        $vehicle->rwc_number       = $request->rwc_number;
-        $vehicle->engine_number    = $request->engine_number;
-        $vehicle->brand_id         = $request->brand_id;
-        $vehicle->model_id         = $request->model_id;
-        $vehicle->color_id         = $request->color_id;
-        $vehicle->body_type        = $request->body_type;
-        $vehicle->vehicle_condition= $request->vehicle_condition;
-        $vehicle->engine_type      = $request->engine_type;
-        $vehicle->transmisssion    = $request->transmisssion;
-        $vehicle->fuel_type        = $request->fuel_type;
-        $vehicle->left_hand_drive  = $request->left_hand_drive;
-        $vehicle->hybird           = $request->hybird;
-        $vehicle->is_visible       = $request->is_visible;
-        $vehicle->description      = $request->description;
-        $vehicle->vehicle_type      = $request->vehicle_type;
-        $vehicle->ac_status        = $request->ac_status;
-
-        $authUser = auth()->user();
-
-
-        if ($request->hasFile('image')) {
-            // Optionally clear previous images
-            $vehicle->clearMediaCollection('vehicles');
-            $vehicle->addMediaFromRequest('image')->toMediaCollection('vehicles');
+        $rcVerificationData = $this->decodeVerificationPayload($request, 'rc_verification_data');
+        if ($rcVerificationData !== null) {
+            $vehicle->rc_verification_data = $rcVerificationData;
+            $vehicle->rc_verified_at = now();
         }
 
         if ($vehicle->save()) {
-
             return redirect()->route('vehicle.index')->with('success', 'Vehicle updated successfully.');
-        } else {
-            return redirect()->back()->with('error', 'Vehicle update failed.');
         }
+
+        return redirect()->back()->with('error', 'Vehicle update failed.');
     }
 
     public function destroy(string $id)

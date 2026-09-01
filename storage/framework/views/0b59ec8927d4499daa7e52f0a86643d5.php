@@ -27,6 +27,7 @@
     <link href="https://fonts.googleapis.com/css?family=Material+Icons+Outlined" rel="stylesheet">
     <!--main css-->
     <link href="<?php echo e(asset('assets/dashboard-assets/assets/css/bootstrap-extended.css')); ?>" rel="stylesheet">
+    <link href="<?php echo e(asset('assets/dashboard-assets/assets/css/extra-icons.css')); ?>" rel="stylesheet">
     <link href="<?php echo e(asset('assets/dashboard-assets/sass/main.css')); ?>" rel="stylesheet">
     <link href="<?php echo e(asset('assets/dashboard-assets/assets/css/horizontal-menu.css')); ?>" rel="stylesheet">
     <link href="<?php echo e(asset('assets/dashboard-assets/sass/dark-theme.css')); ?>" rel="stylesheet">

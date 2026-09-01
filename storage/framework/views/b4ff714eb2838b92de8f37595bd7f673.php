@@ -1,6 +1,6 @@
 <style>
     /* ========================================================================== */
-/* MOBILE RESPONSIVE FIXES FOR BRANCHES TABLE PAGE                            */
+/* MOBILE RESPONSIVE FIXES FOR DRIVERS TABLE PAGE                             */
 /* ========================================================================== */
 
 @media (max-width: 991.98px) {
@@ -14,7 +14,7 @@
         padding: 0 !important;
     }
 
-    /* Header breadcrumb & "Add New Branch" button alignment */
+    /* Header breadcrumb & "Add New Driver" button wrap fix */
     .page-breadcrumb {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -144,13 +144,13 @@
 
 
 <?php $__env->startSection('title'); ?>
-Branchs
+Drivers
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
     <!--breadcrumb-->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-        <div class="breadcrumb-title pe-3">Branchs</div>
+        <div class="breadcrumb-title pe-3">Driver</div>
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
@@ -159,20 +159,86 @@ Branchs
                             <i class="bx bx-home-alt"></i>
                         </a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page">Branch's</li>
+                    <li class="breadcrumb-item active" aria-current="page">Drivers</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
-            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Branch Create')): ?>
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Create')): ?>
                 <div class="d-flex align-items-center gap-2 justify-content-lg-end">
-                    <a class="btn btn-primary px-4" href="<?php echo e(route('branch.create')); ?>"><i
-                            class="bi bi-plus-lg me-2"></i>Add New Branch</a>
+                    <a class="btn btn-primary px-4" href="<?php echo e(route('driver.create')); ?>"><i
+                            class="bi bi-plus-lg me-2"></i>Add New Driver</a>
                 </div>
             <?php endif; ?>
         </div>
     </div>
     <!--end breadcrumb-->
+
+    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Driver Bulk Upload', 'Driver Bulk Upload Template'])): ?>
+    <div class="accordion" id="driverBulkAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="driverBulkHeading">
+                <button class="accordion-button collapsed" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#driverBulkCollapse"
+                        aria-expanded="false"
+                        aria-controls="driverBulkCollapse">
+                    <i class="bi bi-info-circle"></i> &nbsp; Bulk Upload Drivers from Excel
+                </button>
+            </h2>
+
+            <div id="driverBulkCollapse"
+                 class="accordion-collapse collapse"
+                 aria-labelledby="driverBulkHeading"
+                 data-bs-parent="#driverBulkAccordion">
+                <div class="accordion-body">
+
+                    <div class="alert alert-info mt-3">
+                        <ul class="mb-0 ps-3">
+                            <li>Fill in <strong>First Name</strong>, <strong>Last Name</strong>, <strong>Email</strong>, <strong>Phone</strong>, <strong>Driving License Number</strong> and <strong>Vehicle Type</strong> for each driver.</li>
+                            <li><strong>Password</strong> is optional; if left blank it defaults to <code>12345678</code>.</li>
+                            <li><strong>Vehicle Type</strong> and <strong>Vehicle Number</strong> must match existing values exactly (use the dropdowns).</li>
+                            <li>Email, Phone, Aadhaar Number, PAN Card Number and Driving License Number must be unique.</li>
+                            <li><strong>Status</strong> must be either <code>Active</code> or <code>Inactive</code>.</li>
+                            <li class="text-danger">Do not rename, remove, or reorder any columns in the Excel sheet.</li>
+                            <li class="text-danger">Once filled, save the file and upload it here in <strong>.xlsx</strong> format only.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="border: none;">
+                            <h5>Bulk Upload Drivers</h5>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Bulk Upload Template')): ?>
+                                <a href="<?php echo e(route('driver.template.download')); ?>" class="btn btn-sm btn-success">
+                                    <i class="bi bi-download"></i> Download Template
+                                </a>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Bulk Upload')): ?>
+                        <div class="card-body">
+                            <form action="<?php echo e(route('driver.bulk.upload')); ?>" method="POST" enctype="multipart/form-data">
+                                <?php echo csrf_field(); ?>
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <input type="file" name="bulk_file" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-upload"></i> Upload File
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="card mt-4">
         <div class="card-body">
@@ -189,17 +255,14 @@ Branchs
                                 <th>Role</th>
                                 <th>Registred Date</th>
                                 <th>Status</th>
-                                <?php if (! (auth()->user()->hasRole('Company'))): ?>
-                                <th>Company Name</th>
-                                <?php endif; ?>
-                                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Branch Edit', 'Branch Delete'])): ?>
+                                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Driver Show', 'Driver Edit', 'Driver Delete'])): ?>
                                     <th>Action</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
                             
-                            <?php $__currentLoopData = $branchs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $drivers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
                                     <td><?php echo e($loop->iteration); ?></td>
                                     <td class="w60">
@@ -212,19 +275,22 @@ Branchs
                                     <td><?php echo e($user->getRoleNames()->first()); ?></td>
                                     <td><?php echo e(format_datetime($user->created_at)); ?></td>
                                     <td><?php echo check_status($user->status); ?></td>
-                                    <?php if (! (auth()->user()->hasRole('Company'))): ?>
-                                    <td><?php echo e($user->branch?->company?->name ?? 'N/A'); ?></td>
-                                    <?php endif; ?>
-                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Branch Edit', 'Branch Delete'])): ?>
+                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Driver Show', 'Driver Edit', 'Driver Delete'])): ?>
                                     <td>
-                                        
-                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Branch Edit')): ?>
-                                            <a href="<?php echo e(route('branch.edit', $user->id)); ?>" class="btn btn-icon btn-sm"
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Show')): ?>
+                                            <?php if(optional($user->driver)->id): ?>
+                                                <a href="<?php echo e(route('driver.show', $user->driver->id)); ?>"
+                                                    class="btn btn-icon btn-sm" title="View"><i class="text-info"
+                                                        data-feather="eye"></i></a>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Edit')): ?>
+                                            <a href="<?php echo e(route('driver.edit', $user->id)); ?>" class="btn btn-icon btn-sm"
                                                 title="Edit"><i class="text-primary" data-feather="edit"></i></a>
                                         <?php endif; ?>
-                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Branch Delete')): ?>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Delete')): ?>
                                             <a class="btn" href="javascript:void(0);" onclick="deleteItem(this)"
-                                                    data-url="<?php echo e(route('branch.delete', $user->id)); ?>" data-item="Driver"
+                                                    data-url="<?php echo e(route('driver.delete', $user->id)); ?>" data-item="Driver"
                                                     alt="delete"><i
                                                     class="text-danger" data-feather="trash-2"></i></a>
                                         <?php endif; ?>
@@ -240,4 +306,4 @@ Branchs
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\projects\vlocus\resources\views/admin/branch/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\projects\vlocus\resources\views/admin/driver/index.blade.php ENDPATH**/ ?>

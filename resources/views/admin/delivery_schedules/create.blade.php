@@ -1007,7 +1007,7 @@ div#suggestions {
 
     <!-- Add New Vehicle Modal -->
     <div class="modal fade" id="addVehicleModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
             <form id="addVehicleForm">
                 @csrf
                 <div class="modal-content">
@@ -1043,33 +1043,18 @@ div#suggestions {
                                 <div class="invalid-feedback">Please enter the vehicle number.</div>
                             </div>
 
-                            <!-- Engine Number -->
-                            <div class="mb-3 col-md-6">
-                                <label for="rwc_number" class="form-label">Engine Number <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="engine_number" id="engine_number"
-                                    placeholder="Enter RWC Number" value="{{ old('engine_number') }}" required>
-                                <div class="valid-feedback">Looks good!</div>
-                                <div class="invalid-feedback">Please enter the Engine number.</div>
-                            </div>
-
-                            <!-- Fuel Type -->
-                            <div class="mb-3 col-md-6">
-                                <label for="fuel_type" class="form-label">Fuel Type</label>
-
-                                <select class="form-select" name="fuel_type" id="fuel_type" required>
-                                    <option value="0" {{ old('fuel_type') == '0' ? 'selected' : '' }}>Petrol
-                                    </option>
-                                    <option value="1" {{ old('fuel_type') == '1' ? 'selected' : '' }}>Disel
-                                    </option>
-                                </select>
-                                <div class="invalid-feedback">Please enter a valid fuel type.</div>
+                            <!-- RC details: auto-filled by the Verify step, editable before saving -->
+                            <div class="col-12 rc-fields-grid">
+                                <p class="text-muted small mb-2">
+                                    Enter the vehicle number and click <strong>Verify</strong> &mdash; the fields below
+                                    are populated from the RC record and can be edited before saving.
+                                </p>
+                                @include('admin.vehicle._rc_fields', ['data' => null])
                             </div>
 
                             <div class="mb-3 col-md-6">
-                                <label for="brand_id" class="form-label">Vehicle Type <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select" name="vehicle_type" id="vehicle_type" required>
+                                <label for="vehicle_type" class="form-label">Vehicle Type</label>
+                                <select class="form-select" name="vehicle_type" id="vehicle_type">
                                     <option value="" selected>Select Vehicle Type</option>
                                     @foreach ($vehicle_types as $vehicle_type)
                                         <option value="{{ $vehicle_type->id }}"
@@ -1092,7 +1077,7 @@ div#suggestions {
                                     src="" data-holder-rendered="true" style="display: none;">
                             </div>
                             <div class="mb-3">
-                                <input type="file" class="form-control" name="image" id="imgInp" required>
+                                <input type="file" class="form-control" name="image" id="imgInp">
                             </div>
 
                         </div>
@@ -1193,6 +1178,8 @@ div#suggestions {
                                 <small id="modalDlVerifyStatus" class="d-block mt-1"></small>
                                 <input type="hidden" name="driving_license_verification_data" id="modal_dl_verification_data">
                             </div>
+
+                            @include('admin.delivery_schedules._add_driver_modal_extra')
 
                             <div class="mb-3 col-md-4">
                                 <label class="form-label">Vehicle Types <span class="text-danger">*</span></label>
@@ -1429,6 +1416,9 @@ div#suggestions {
         });
     </script>
 
+    {{-- Shared RC field-mapping helper (populateRcFields) --}}
+    @include('admin.vehicle._rc_populate')
+
     {{-- RC verification for the "Add New Vehicle" modal --}}
     <script>
         let modalRcVerified = false;
@@ -1498,25 +1488,25 @@ div#suggestions {
                             let data = response.data || {};
                             console.log('BankU RC verify response:', data);
 
-                            if (data.engine && !$('#engine_number').val()) {
-                                $('#engine_number').val(data.engine);
-                            }
-
-                            if ((data.reg_no || data.vehicle_number) && !$('#vehicle_number').val()) {
-                                $('#vehicle_number').val(data.reg_no || data.vehicle_number);
-                            }
+                            // Populate every RC field rendered in the modal
+                            // (engine no., chassis, class, colour, insurance,
+                            // permits, tax / PUCC dates, ...) from the RC record.
+                            // Also stashes the raw payload in the hidden input.
+                            populateRcFields(data, { payloadTarget: '#modal_rc_verification_data' });
                             $('#rwc_number').val($('#vehicle_number').val());
 
-                            let fuelType = (data.type || '').trim().toLowerCase();
-                            if (fuelType === 'petrol') {
-                                $('#fuel_type').val('0');
-                            } else if (fuelType === 'diesel' || fuelType === 'disel') {
-                                $('#fuel_type').val('1');
+                            // Auto-fill the vehicle name from the RC record so the
+                            // user really only has to supply the registration number.
+                            let vehicleName = (data.vehicle_manufacturer_name || '').trim();
+                            if (data.model) {
+                                vehicleName = (vehicleName + ' ' + String(data.model).trim()).trim();
                             }
-
-                            // Keep the full verified payload so it's persisted with the
-                            // vehicle record on submit, even for fields with no matching input.
-                            $('#modal_rc_verification_data').val(JSON.stringify(data));
+                            if (!vehicleName) {
+                                vehicleName = (data.owner || '').trim();
+                            }
+                            if (vehicleName && !$('#name').val().trim()) {
+                                $('#name').val(vehicleName);
+                            }
 
                             $status.removeClass('text-danger').addClass('text-success')
                                 .text('RC verified successfully.');
@@ -1664,138 +1654,8 @@ div#suggestions {
         // });
     </script>
 
-    {{-- Driving License verification for the "Add New Driver" modal --}}
-    <script>
-        let modalDlVerified = false;
-
-        function lockModalDlFields() {
-            modalDlVerified = true;
-            $('#modal_driving_license_number').prop('readonly', true);
-            $('#modal_date_of_birth').prop('readonly', true);
-            $('#modalVerifyDlBtn')
-                .prop('disabled', true)
-                .removeClass('btn-grd-info')
-                .addClass('btn-grd-success')
-                .html('<i class="bx bx-check"></i> Verified');
-        }
-
-        function resetModalDlVerification() {
-            modalDlVerified = false;
-            $('#modal_dl_verification_data').val('');
-            $('#modalDlVerifyStatus').removeClass('text-success text-danger').text('');
-            $('#modal_driving_license_number').prop('readonly', false);
-            $('#modal_date_of_birth').prop('readonly', false);
-            $('#modalVerifyDlBtn')
-                .prop('disabled', false)
-                .removeClass('btn-grd-success')
-                .addClass('btn-grd-info')
-                .text('Verify');
-        }
-
-        // Invalidate a previously verified payload if the user edits the
-        // license number afterwards, so mismatched data never gets saved.
-        $('#modal_driving_license_number').on('input', function() {
-            if (modalDlVerified) return;
-            $('#modal_dl_verification_data').val('');
-            $('#modalDlVerifyStatus').removeClass('text-success text-danger').text('');
-        });
-
-        function normalizeModalDobForInput(value) {
-            if (!value) return '';
-            value = String(value).trim();
-            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-            let match = value.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
-            if (match) return `${match[3]}-${match[2]}-${match[1]}`;
-            return '';
-        }
-
-        $('#modalVerifyDlBtn').on('click', function() {
-            if (modalDlVerified) return;
-
-            let dlNumber = $('#modal_driving_license_number').val().trim();
-            let dob = $('#modal_date_of_birth').val();
-            let $btn = $(this);
-            let $status = $('#modalDlVerifyStatus');
-
-            $status.removeClass('text-success text-danger').text('');
-
-            if (!dlNumber) {
-                round_error_noti('Please enter the Driving License number first.');
-                return;
-            }
-            if (!dob) {
-                round_error_noti('Please select Date of Birth before verifying the license.');
-                return;
-            }
-
-            function callVerify() {
-                $.ajax({
-                    url: '{{ route('driver.verifyLicense') }}',
-                    type: 'POST',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content'),
-                        driving_license_number: dlNumber,
-                        dob: dob,
-                    },
-                    beforeSend: function() {
-                        $btn.prop('disabled', true).text('Verifying...');
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            let data = response.data || {};
-                            console.log('BankU DL verify response:', data);
-
-                            let details = data.details_of_driving_licence || {};
-
-                            let fullName = details.name || data.name || '';
-                            if (fullName) {
-                                let parts = fullName.trim().split(/\s+/);
-                                $('#modal_first_name').val(parts.shift());
-                                $('#modal_last_name').val(parts.join(' '));
-                            }
-
-                            let address = details.address || data.address || '';
-                            if (address) {
-                                $('#modal_address').val(address);
-                            }
-
-                            let dobResp = normalizeModalDobForInput(data.dob || details.dob || '');
-                            if (dobResp) {
-                                $('#modal_date_of_birth').val(dobResp);
-                            }
-
-                            $('#modal_dl_verification_data').val(JSON.stringify(data));
-
-                            $status.removeClass('text-danger').addClass('text-success')
-                                .text('Driving license verified successfully.');
-                            round_success_noti('Driving license verified successfully.');
-
-                            lockModalDlFields();
-                        } else {
-                            $status.removeClass('text-success').addClass('text-danger')
-                                .text(response.message || 'Verification failed.');
-                            round_error_noti(response.message || 'Driving license verification failed.');
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'An unexpected error occurred while verifying the license.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-                        $status.removeClass('text-success').addClass('text-danger').text(errorMessage);
-                        round_error_noti(errorMessage);
-                    },
-                    complete: function() {
-                        if (!modalDlVerified) {
-                            $btn.prop('disabled', false).text('Verify');
-                        }
-                    }
-                });
-            }
-
-            callVerify();
-        });
-    </script>
+    {{-- Driving licence fetch + Aadhaar/PAN KYC for the "Add New Driver" modal --}}
+    @include('admin.delivery_schedules._add_driver_modal_scripts')
 
     {{-- add new driver --}}
     <script>

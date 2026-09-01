@@ -245,42 +245,47 @@
                     <table id="example2" class="table table-striped table-bordered" style="width:100%">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Vehicle Number</th>
-
-
-                                <th>Image</th>
-                                <th>Visiblity</th>
-                                @canany(['Vehicle Edit', 'Vehicle Delete'])
+                                <th>RC Number</th>
+                                <th>Owner Name</th>
+                                <th>Vehicle Class</th>
+                                <th>RC Status</th>
+                                <th>Insurance Upto</th>
+                                <th>Verified</th>
+                                <th>Status</th>
                                 <th>Action</th>
-                                @endcanany
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($vehicles as $item)
                                 <tr>
                                     <td>
-                                        <a href="{{route('vehicle.journey',$item->id)}}">{{ $item->name }}</a>
-                                        
+                                        <a href="{{ route('vehicle.show', $item->id) }}">{{ $item->vehicle_number }}</a>
                                     </td>
-                                    <td>{{ $item->vehicle_number }}</td>
-    
-                                    
-                                    <td><img src="{{ $item->getFirstMediaUrl('vehicles') }}" alt="" width="50"></td>
+                                    <td>{{ $item->owner_name ?? '-' }}</td>
+                                    <td>{{ $item->vehicle_class ?? '-' }}</td>
+                                    <td>{{ $item->rc_status ?? '-' }}</td>
+                                    <td>{{ $item->insurance_upto ?? '-' }}</td>
+                                    <td>
+                                        @if ($item->rc_verified_at)
+                                            <span class="badge bg-success text-light">Verified</span>
+                                        @else
+                                            <span class="badge bg-secondary text-light">Manual</span>
+                                        @endif
+                                    </td>
                                     <td>{!! check_status($item->is_visible) !!}</td>
-                                    @canany(['Vehicle Edit', 'Vehicle Delete'])
-                                        <td class="d-flex">
-                                            @can('Vehicle Edit')
-                                                <a class="btn" href="{{ route('vehicle.edit', $item->id) }}" alt="edit"><i
-                                                        class="text-primary" data-feather="edit"></i></a>
-                                            @endcan
-                                            @can('Vehicle Delete')
-                                                <a class="btn" href="javascript:void(0);" onclick="deleteItem(this)"
-                                                    data-url="{{ route('vehicle.delete', $item->id) }}" data-item="Route"
-                                                    alt="delete"><i class="text-danger" data-feather="trash-2"></i></a>
-                                            @endcan
-                                        </td>
-                                    @endcanany
+                                    <td class="d-flex">
+                                        <a class="btn" href="{{ route('vehicle.show', $item->id) }}" alt="view"><i
+                                                class="text-info" data-feather="eye"></i></a>
+                                        @can('Vehicle Edit')
+                                            <a class="btn" href="{{ route('vehicle.edit', $item->id) }}" alt="edit"><i
+                                                    class="text-primary" data-feather="edit"></i></a>
+                                        @endcan
+                                        @can('Vehicle Delete')
+                                            <a class="btn" href="javascript:void(0);" onclick="deleteItem(this)"
+                                                data-url="{{ route('vehicle.delete', $item->id) }}" data-item="Vehicle"
+                                                alt="delete"><i class="text-danger" data-feather="trash-2"></i></a>
+                                        @endcan
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

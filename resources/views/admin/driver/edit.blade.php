@@ -3,12 +3,13 @@
 @section('title')
     Driver
 @endsection
+
 @section('css')
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
-    
 @endsection
+
 @section('content')
 
     <!--breadcrumb-->
@@ -18,21 +19,22 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
                     <li class="breadcrumb-item">
-                        <a href="{{ route('dashboard') }}">
-                            <i class="bx bx-home-alt"></i>
-                        </a>
+                        <a href="{{ route('dashboard') }}"><i class="bx bx-home-alt"></i></a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">Edit Driver</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
-            @can('Driver Create')
-                <div class="d-flex align-items-center gap-2 justify-content-lg-end">
-                    <a class="btn btn-primary px-4" href="{{ route('driver.index') }}"><i
-                            class="fadeIn animated bx bx-arrow-back"></i>Back</a>
-                </div>
-            @endcan
+            <div class="d-flex align-items-center gap-2 justify-content-lg-end">
+                @if (optional($user->driver)->id)
+                    <a class="btn btn-grd-info text-light px-4" href="{{ route('driver.show', $user->driver->id) }}">
+                        <i class="bx bx-show"></i> View
+                    </a>
+                @endif
+                <a class="btn btn-primary px-4" href="{{ route('driver.index') }}"><i
+                        class="fadeIn animated bx bx-arrow-back"></i>Back</a>
+            </div>
         </div>
     </div>
     <!--end breadcrumb-->
@@ -40,11 +42,62 @@
     <form class="needs-validation" action="{{ route('driver.update') }}" method="post" novalidate
         enctype="multipart/form-data">
         @csrf
-
-
         <input type="hidden" id="user_id" name="user_id" value="{{ $user->id }}">
+
         <div class="row">
             <div class="col-md-9">
+
+                <div class="card mt-4">
+                    <div class="card-header text-center">Driving Licence</div>
+                    <div class="card-body">
+                        <div class="form-group row mb-3">
+                            <label class="col-md-3 col-form-label">Date Of Birth</label>
+                            <div class="col-md-9">
+                                <input type="date" class="form-control" name="date_of_birth" id="date_of_birth"
+                                    value="{{ old('date_of_birth', $user->date_of_birth) }}">
+                            </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label class="col-md-3 col-form-label">Driving Licence Number</label>
+                            <div class="col-md-9">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="driving_license_number"
+                                        id="driving_license_number"
+                                        value="{{ old('driving_license_number', optional($user->driver)->driving_license_number) }}">
+                                    <button type="button" class="btn btn-grd-info text-light" id="verifyDlBtn">
+                                        Fetch DL Details
+                                    </button>
+                                </div>
+                                <small id="dlVerifyStatus" class="d-block mt-1"></small>
+                                <input type="hidden" name="driving_license_verification_data"
+                                    id="driving_license_verification_data"
+                                    value="{{ old('driving_license_verification_data', optional($user->driver)->driving_license_verification_data ? json_encode($user->driver->driving_license_verification_data) : '') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label class="col-md-3 col-form-label">Driving Licence Image</label>
+                            <div class="col-md-9">
+                                <div class="mb-3">
+                                    <img class="img-thumbnail rounded me-2" id="blah4" alt="" width="200"
+                                        src="{{ optional($user->driver)->getFirstMediaUrl('driver-license') }}"
+                                        data-holder-rendered="true"
+                                        style="display: {{ is_have_image(optional($user->driver)->getFirstMediaUrl('driver-license')) }};">
+                                </div>
+                                <div class="mb-0">
+                                    <input class="form-control" name="driver_license_image" type="file" id="imgInp4">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <p class="text-muted small mb-3">
+                            Edit any field below, or click <strong>Fetch DL Details</strong> to refresh from BankU.
+                        </p>
+
+                        @include('admin.driver._dl_fields', ['data' => $user->driver])
+                    </div>
+                </div>
+
                 <div class="card mt-4">
                     <div class="card-header text-center">Basic Information</div>
                     <div class="card-body">
@@ -52,21 +105,21 @@
                             <label class="col-md-3 col-form-label">First Name <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" placeholder="Enter First name" name="first_name"
-                                    value="{{ $user->first_name }}" required>
+                                    id="first_name" value="{{ old('first_name', $user->first_name) }}" required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Last Name <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" placeholder="Enter Last name" name="last_name"
-                                    value="{{ $user->last_name }}" required>
+                                    id="last_name" value="{{ old('last_name', $user->last_name) }}" required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Email <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input type="email" class="form-control" name="email" id="email"
-                                    value="{{ $user->email }}" required>
+                                    value="{{ old('email', $user->email) }}" required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -83,29 +136,22 @@
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Mobile No. <span class="text-danger">*</span></label>
                             <div class="col-md-9">
-                                <input type="text" class="form-control" name="phone" value="{{ $user->phone }}"
+                                <input type="text" class="form-control" name="phone" value="{{ old('phone', $user->phone) }}"
                                     required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Alternative Mobile No. <span
-                                    class="text-danger"></span></label>
+                            <label class="col-md-3 col-form-label">Alternative Mobile No.</label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" name="opt_mobile_no"
-                                    value="{{ $user->opt_mobile_no }}">
+                                    value="{{ old('opt_mobile_no', $user->opt_mobile_no) }}">
                             </div>
                         </div>
                         <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Date Of Birth <span class="text-danger"></span></label>
+                            <label class="col-md-3 col-form-label">Address</label>
                             <div class="col-md-9">
-                                <input type="date" class="form-control" name="date_of_birth"
-                                    value="{{ $user->date_of_birth }}">
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Address <span class="text-danger"></span></label>
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" name="address" value="{{ $user->address }}">
+                                <input type="text" class="form-control" name="address" id="address"
+                                    value="{{ old('address', $user->address) }}">
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -122,86 +168,12 @@
                                 </div>
                             </div>
                         </div>
-                        
-                       
                         <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Aadhar Card Number <span
-                                    class="text-danger"></span></label>
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" name="aadhaar_number"
-                                    value="{{ $user->aadhar_card_number }}">
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Aadhar Card Image</label>
-                            <div class="col-md-9">
-                                <div class="mb-3">
-                                    <img class="img-thumbnail rounded me-2" id="blah2" alt="" width="200"
-                                        src="{{ $user->getFirstMediaUrl('system-user-aadhar') }}"
-                                        data-holder-rendered="true"
-                                        style="display: {{ is_have_image($user->getFirstMediaUrl('system-user-aadhar')) }};">
-                                </div>
-                                <div class="mb-0">
-                                    <input class="form-control" name="aadhar_image" type="file" id="imgInp2">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Pan Card Number <span
-                                    class="text-danger"></span></label>
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" name="pan_card_number"
-                                    value="{{ $user->pan_card_number }}">
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Pan Card Image</label>
-                            <div class="col-md-9">
-                                <div class="mb-3">
-                                    <img class="img-thumbnail rounded me-2" id="blah3" alt="" width="200"
-                                        src="{{ $user->getFirstMediaUrl('system-user-pan') }}"
-                                        data-holder-rendered="true"
-                                        style="display: {{ is_have_image($user->getFirstMediaUrl('system-user-pan')) }};">
-                                </div>
-                                <div class="mb-0">
-                                    <input class="form-control" name="pan_image" type="file" id="imgInp3">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Driving License Number <span
-                                    class="text-danger"></span></label>
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" name="driving_license_number"
-                                    value="{{ old('driving_license_number', optional($user->driver)->driving_license_number) }}">
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Driving License Image</label>
-                            <div class="col-md-9">
-                                <div class="mb-3">
-
-                                    <img class="img-thumbnail rounded me-2" id="blah4" alt="" width="200"
-                                        src="{{ optional($user->driver)->getFirstMediaUrl('driver-license') }}"
-                                        data-holder-rendered="true"
-                                        style="display: {{ is_have_image(optional($user->driver)->getFirstMediaUrl('driver-license')) }};">
-
-                                </div>
-                                <div class="mb-0">
-                                    <input class="form-control" name="driver_license_image" type="file"
-                                        id="imgInp4">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Vehicle Types <span
-                                    class="text-danger">*</span></label>
+                            <label class="col-md-3 col-form-label">Vehicle Types <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <select class="form-control input-height" name="vehicle_type" required>
                                     <option value selected disabled>Select...</option>
                                     @foreach ($vehicle_types as $item)
-                                       
                                         <option value="{{ $item->id }}"
                                             @if (old('vehicle_type', optional($user->driver)->vehicle_type ?? '') == $item->id) selected @endif>
                                             {{ $item->name }}
@@ -210,9 +182,6 @@
                                 </select>
                             </div>
                         </div>
-
-                   
-
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Vehicle <span class="text-danger">*</span></label>
                             <div class="col-md-9">
@@ -220,15 +189,14 @@
                                     <option value selected disabled>Select...</option>
                                     @foreach ($vehicles as $item)
                                         <option value="{{ $item->id }}"
-                                            @if (old('vehicle_id', optional($user->driver)->vehicle_id) == $item->id) selected @endif>{{ $item->name }}</option>
+                                            @if (old('vehicle_id', optional($user->driver)->vehicle_id) == $item->id) selected @endif>
+                                            {{ $item->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
-
                         <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Driving Exprience <span
-                                    class="text-danger"></span></label>
+                            <label class="col-md-3 col-form-label">Driving Exprience</label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" name="driving_exprience"
                                     value="{{ old('driving_exprience', optional($user->driver)->driving_exprience) }}">
@@ -236,6 +204,14 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card mt-4">
+                    <div class="card-header text-center">Driver KYC</div>
+                    <div class="card-body">
+                        @include('admin.driver._kyc_fields', ['data' => $user])
+                    </div>
+                </div>
+
             </div>
             <div class="col-md-3">
                 <div class="row">
@@ -252,12 +228,11 @@
                                 </div>
                                 <div class="col-sm-12 mb-3">
                                     <div class="form-group">
-                                        <label class="col-form-label">Password <span class="text-danger">*</span></label>
+                                        <label class="col-form-label">Password</label>
                                         <input type="text" class="form-control" name="password"
                                             value="{{ old('password') }}">
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -267,13 +242,13 @@
                             <div class="mb-3">
                                 <label class="form-label mb-3 d-flex">Status</label>
                                 <div class="form-check form-check-inline">
-                                    <input type="radio" id="customRadioInline1" name="status"
-                                        class="form-check-input" value="1" {{ check_uncheck($user->status, 1) }}>
+                                    <input type="radio" id="customRadioInline1" name="status" class="form-check-input"
+                                        value="1" {{ check_uncheck($user->status, 1) }}>
                                     <label class="form-check-label" for="customRadioInline1">Active</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <input type="radio" id="customRadioInline2" name="status"
-                                        class="form-check-input" value="0" {{ check_uncheck($user->status, 0) }}>
+                                    <input type="radio" id="customRadioInline2" name="status" class="form-check-input"
+                                        value="0" {{ check_uncheck($user->status, 0) }}>
                                     <label class="form-check-label" for="customRadioInline2">Inactive</label>
                                 </div>
                             </div>
@@ -286,226 +261,34 @@
             </div>
         </div>
     </form>
-    
-    
-    <div class="modal fade" id="quickCompanyAddModal">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-0 bg-grd-primary py-2">
-                    <h5 class="modal-title text-light">Company Add Form</h5>
-                    <a href="javascript:;" class="primaery-menu-close" data-bs-dismiss="modal">
-                        <i class="material-icons-outlined text-light">close</i>
-                    </a>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-
-                        <div class="card w-100">
-                            <form action="" id="companyCreateForm" class="needs-validation" novalidate>
-                                @csrf
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label class="form-label" for="name">Company Name <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" placeholder="Enter Name"
-                                            name="company_name" value="{{ old('company_name') }}" required>
-                                        <div class="valid-feedback">Looks good!</div>
-                                        <div class="invalid-feedback">Please enter company name.</div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <label class="form-label" for="description">Email <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="email" id="email"
-                                                value="{{ old('email') }}"placeholder="Enter Email" required>
-                                            <div class="valid-feedback">Looks good!</div>
-                                            <div class="invalid-feedback">Please enter a valid email.</div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label" for="phone">Phone <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" value="{{ old('phone') }}"
-                                                name="phone" id="phone" placeholder="Enter phone" required>
-                                            <div class="valid-feedback">Looks good!</div>
-                                            <div class="invalid-feedback">Please enter phone.</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-
-
-
-                                        <div class="col-md-6">
-                                            <label class="form-label" for="trade_license">Registrations Number <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control"
-                                                value="{{ old('trade_license') }}" name="trade_license"
-                                                id="trade_license" placeholder="Enter trade_license" required>
-                                            <div class="valid-feedback">Looks good!</div>
-                                            <div class="invalid-feedback">Please enter trade license.</div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="col-form-label">Password <span
-                                                        class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" name="password"
-                                                        id="generated-password" value="{{ old('password') }}" required>
-                                                    <button type="button" class="btn btn-secondary"
-                                                        id="generate-password">Generate</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <label class="form-label" for="address">Address</label>
-                                            <textarea name="address" class="form-control" placeholder="Enter Address" id="address">{{ old('address') }}</textarea>
-                                            <div class="valid-feedback">Looks good!</div>
-                                            <div class="invalid-feedback">Please enter a valid address.</div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label mb-3 d-flex">Status</label>
-                                            <div class="form-check form-check-inline">
-                                                <input type="radio" id="customRadioInline1" name="is_verified"
-                                                    class="form-check-input" value="1">
-                                                <label class="form-check-label" for="customRadioInline1">Verified</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input type="radio" id="customRadioInline2" name="is_verified"
-                                                    class="form-check-input" value="0">
-                                                <label class="form-check-label" for="customRadioInline2">Not
-                                                    Verified</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                                <div class="d-flex">
-
-                                    <button type="button" class="btn btn-grd-danger text-light "
-                                        data-bs-dismiss="modal">Close</button>
-
-
-                                    <button type="submit" id="submitBtn"
-                                        class="btn btn-grd-primary px-4 mx-2 text-light">Submit</button>
-                                </div>
-
-                            </form>
-
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
 
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="{{ asset('assets/dashboard-assets/assets/plugins/select2/js/select2-custom.js') }}"></script>
+
+    @include('admin.driver._dl_scripts')
+    @include('admin.driver._kyc_scripts')
+
     <script>
         $('#email').on('keyup', function() {
             $('#login-email').val($(this).val());
         });
-    </script>
-    <script>
-        $('#imgInp2').on('change', function() {
-            var input = this;
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#blah2').attr('src', e.target.result).css('display', 'block');
+
+        [
+            ['#imgInp', '#blah'],
+            ['#imgInp4', '#blah4']
+        ].forEach(function(pair) {
+            $(pair[0]).on('change', function() {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        $(pair[1]).attr('src', e.target.result).css('display', 'block');
+                    };
+                    reader.readAsDataURL(this.files[0]);
                 }
-                reader.readAsDataURL(input.files[0]);
-            }
-        });
-        $('#imgInp3').on('change', function() {
-            var input = this;
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#blah3').attr('src', e.target.result).css('display', 'block');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        });
-        $('#imgInp4').on('change', function() {
-            var input = this;
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#blah4').attr('src', e.target.result).css('display', 'block');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        });
-        
-        
-        document.getElementById('generate-password').addEventListener('click', function() {
-            const length = 8;
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-            let password = '';
-
-            for (let i = 0; i < length; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-
-            document.getElementById('generated-password').value = password;
-        });
-    </script>
-       <script>
-        $(document).ready(function() {
-
-            $('#companyCreateForm').on('submit', function(e) {
-                e.preventDefault();
-                let formData = new FormData(this);
-                $.ajax({
-                    url: '{{ route('driver.add_company') }}',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    beforeSend: function() {
-                        $('#submitBtn').prop('disabled', true).text('Saving...');
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            round_success_noti(response.message);
-                            $('#companyCreateForm')[0].reset();
-                            $('#quickCompanyAddModal').modal('hide');
-
-                            let newCompany =
-                                `<option value="${response.company.id}">${response.company.name}</option>`;
-                            $('#company_id').append(newCompany);
-                        } else {
-                            round_error_noti('Error: ' + response.message);
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'An unexpected error occurred!';
-                        if (xhr.responseJSON) {
-                            if (typeof xhr.responseJSON.message === 'object') {
-                                errorMessage = '';
-                                $.each(xhr.responseJSON.message, function(key, value) {
-                                    errorMessage += value[0] + "<br>";
-                                });
-                            } else if (typeof xhr.responseJSON.message === 'string') {
-                                errorMessage = xhr.responseJSON.message;
-                            }
-                        }
-                        round_error_noti(errorMessage);
-                    },
-                    complete: function() {
-                        $('#submitBtn').prop('disabled', false).text('Submit');
-                    }
-                });
             });
-
-
-
         });
     </script>
 @endsection

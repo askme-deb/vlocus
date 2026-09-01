@@ -1,6 +1,6 @@
 <style>
     /* ========================================================================== */
-/* MOBILE RESPONSIVE FIXES FOR DRIVERS TABLE PAGE                             */
+/* MOBILE RESPONSIVE FIXES FOR VEHICLE LIST TABLE PAGE                       */
 /* ========================================================================== */
 
 @media (max-width: 991.98px) {
@@ -14,7 +14,7 @@
         padding: 0 !important;
     }
 
-    /* Header breadcrumb & "Add New Driver" button wrap fix */
+    /* Header breadcrumb & "Add New Vehicle" button alignment */
     .page-breadcrumb {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -141,64 +141,62 @@
     }
 }
 </style>
-@extends('layouts.app')
 
-@section('title')
-Drivers
-@endsection
 
-@section('content')
+<?php $__env->startSection('title'); ?>
+    Vehicle
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('content'); ?>
     <!--breadcrumb-->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-        <div class="breadcrumb-title pe-3">Driver</div>
+        <div class="breadcrumb-title pe-3">Vehicle</div>
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
                     <li class="breadcrumb-item">
-                        <a href="{{ route('dashboard') }}">
+                        <a href="<?php echo e(route('dashboard')); ?>">
                             <i class="bx bx-home-alt"></i>
                         </a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page">Drivers</li>
+                    <li class="breadcrumb-item active" aria-current="page">Vehicle</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
-            @can('Driver Create')
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Vehicle Create')): ?>
                 <div class="d-flex align-items-center gap-2 justify-content-lg-end">
-                    <a class="btn btn-primary px-4" href="{{ route('driver.create') }}"><i
-                            class="bi bi-plus-lg me-2"></i>Add New Driver</a>
+                    <a class="btn btn-primary px-4" href="<?php echo e(route('vehicle.create')); ?>"><i class="bi bi-plus-lg me-2"></i>Add
+                        New Vehicle</a>
                 </div>
-            @endcan
+            <?php endif; ?>
         </div>
     </div>
     <!--end breadcrumb-->
 
-    @canany(['Driver Bulk Upload', 'Driver Bulk Upload Template'])
-    <div class="accordion" id="driverBulkAccordion">
+    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Vehicle Bulk Upload', 'Vehicle Bulk Upload Template'])): ?>
+    <div class="accordion" id="vehicleBulkAccordion">
         <div class="accordion-item">
-            <h2 class="accordion-header" id="driverBulkHeading">
+            <h2 class="accordion-header" id="vehicleBulkHeading">
                 <button class="accordion-button collapsed" type="button"
                         data-bs-toggle="collapse"
-                        data-bs-target="#driverBulkCollapse"
+                        data-bs-target="#vehicleBulkCollapse"
                         aria-expanded="false"
-                        aria-controls="driverBulkCollapse">
-                    <i class="bi bi-info-circle"></i> &nbsp; Bulk Upload Drivers from Excel
+                        aria-controls="vehicleBulkCollapse">
+                    <i class="bi bi-info-circle"></i> &nbsp; Bulk Upload Vehicles from Excel
                 </button>
             </h2>
 
-            <div id="driverBulkCollapse"
+            <div id="vehicleBulkCollapse"
                  class="accordion-collapse collapse"
-                 aria-labelledby="driverBulkHeading"
-                 data-bs-parent="#driverBulkAccordion">
+                 aria-labelledby="vehicleBulkHeading"
+                 data-bs-parent="#vehicleBulkAccordion">
                 <div class="accordion-body">
 
                     <div class="alert alert-info mt-3">
                         <ul class="mb-0 ps-3">
-                            <li>Fill in <strong>First Name</strong>, <strong>Last Name</strong>, <strong>Email</strong>, <strong>Phone</strong>, <strong>Driving License Number</strong> and <strong>Vehicle Type</strong> for each driver.</li>
-                            <li><strong>Password</strong> is optional; if left blank it defaults to <code>12345678</code>.</li>
-                            <li><strong>Vehicle Type</strong> and <strong>Vehicle Number</strong> must match existing values exactly (use the dropdowns).</li>
-                            <li>Email, Phone, Aadhaar Number, PAN Card Number and Driving License Number must be unique.</li>
+                            <li>Fill in <strong>Name</strong>, <strong>Vehicle Number</strong>, <strong>RWC Number</strong>, <strong>Engine Number</strong>, <strong>Brand</strong>, <strong>Model</strong> and <strong>Color</strong> for each vehicle.</li>
+                            <li><strong>Brand</strong>, <strong>Model</strong>, <strong>Color</strong> and <strong>Vehicle Type</strong> must match existing values exactly (use the dropdowns).</li>
                             <li><strong>Status</strong> must be either <code>Active</code> or <code>Inactive</code>.</li>
                             <li class="text-danger">Do not rename, remove, or reorder any columns in the Excel sheet.</li>
                             <li class="text-danger">Once filled, save the file and upload it here in <strong>.xlsx</strong> format only.</li>
@@ -207,18 +205,18 @@ Drivers
 
                     <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center" style="border: none;">
-                            <h5>Bulk Upload Drivers</h5>
-                            @can('Driver Bulk Upload Template')
-                                <a href="{{ route('driver.template.download') }}" class="btn btn-sm btn-success">
+                            <h5>Bulk Upload Vehicles</h5>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Vehicle Bulk Upload Template')): ?>
+                                <a href="<?php echo e(route('vehicle.template.download')); ?>" class="btn btn-sm btn-success">
                                     <i class="bi bi-download"></i> Download Template
                                 </a>
-                            @endcan
+                            <?php endif; ?>
                         </div>
 
-                        @can('Driver Bulk Upload')
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Vehicle Bulk Upload')): ?>
                         <div class="card-body">
-                            <form action="{{ route('driver.bulk.upload') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
+                            <form action="<?php echo e(route('vehicle.bulk.upload')); ?>" method="POST" enctype="multipart/form-data">
+                                <?php echo csrf_field(); ?>
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <input type="file" name="bulk_file" class="form-control" required>
@@ -231,14 +229,14 @@ Drivers
                                 </div>
                             </form>
                         </div>
-                        @endcan
+                        <?php endif; ?>
                     </div>
 
                 </div>
             </div>
         </div>
     </div>
-    @endcanany
+    <?php endif; ?>
 
     <div class="card mt-4">
         <div class="card-body">
@@ -247,61 +245,55 @@ Drivers
                     <table id="example2" class="table table-striped table-bordered" style="width:100%">
                         <thead>
                             <tr>
-                                <th>Sl No.</th>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Role</th>
-                                <th>Registred Date</th>
+                                <th>RC Number</th>
+                                <th>Owner Name</th>
+                                <th>Vehicle Class</th>
+                                <th>RC Status</th>
+                                <th>Insurance Upto</th>
+                                <th>Verified</th>
                                 <th>Status</th>
-                                @canany(['Driver Show', 'Driver Edit', 'Driver Delete'])
-                                    <th>Action</th>
-                                @endcanany
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            
-                            @foreach ($drivers as $user)
+                            <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td class="w60">
-                                        <img class="avatar" width="50"
-                                            src="{{ $user->getFirstMediaUrl('system-user-image') }}" alt="">
-                                    </td>
-                                    <td><span class="font-16">{{ $user->name }}</span></td>
-                                    <td>{{ $user->email }}</td>
-                                    <td>{{ $user->phone }}</td>
-                                    <td>{{ $user->getRoleNames()->first() }}</td>
-                                    <td>{{ format_datetime($user->created_at) }}</td>
-                                    <td>{!! check_status($user->status) !!}</td>
-                                    @canany(['Driver Show', 'Driver Edit', 'Driver Delete'])
                                     <td>
-                                        @can('Driver Show')
-                                            @if (optional($user->driver)->id)
-                                                <a href="{{ route('driver.show', $user->driver->id) }}"
-                                                    class="btn btn-icon btn-sm" title="View"><i class="text-info"
-                                                        data-feather="eye"></i></a>
-                                            @endif
-                                        @endcan
-                                        @can('Driver Edit')
-                                            <a href="{{ route('driver.edit', $user->id) }}" class="btn btn-icon btn-sm"
-                                                title="Edit"><i class="text-primary" data-feather="edit"></i></a>
-                                        @endcan
-                                        @can('Driver Delete')
-                                            <a class="btn" href="javascript:void(0);" onclick="deleteItem(this)"
-                                                    data-url="{{ route('driver.delete', $user->id) }}" data-item="Driver"
-                                                    alt="delete"><i
-                                                    class="text-danger" data-feather="trash-2"></i></a>
-                                        @endcan
+                                        <a href="<?php echo e(route('vehicle.show', $item->id)); ?>"><?php echo e($item->vehicle_number); ?></a>
                                     </td>
-                                    @endcanany
+                                    <td><?php echo e($item->owner_name ?? '-'); ?></td>
+                                    <td><?php echo e($item->vehicle_class ?? '-'); ?></td>
+                                    <td><?php echo e($item->rc_status ?? '-'); ?></td>
+                                    <td><?php echo e($item->insurance_upto ?? '-'); ?></td>
+                                    <td>
+                                        <?php if($item->rc_verified_at): ?>
+                                            <span class="badge bg-success text-light">Verified</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary text-light">Manual</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo check_status($item->is_visible); ?></td>
+                                    <td class="d-flex">
+                                        <a class="btn" href="<?php echo e(route('vehicle.show', $item->id)); ?>" alt="view"><i
+                                                class="text-info" data-feather="eye"></i></a>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Vehicle Edit')): ?>
+                                            <a class="btn" href="<?php echo e(route('vehicle.edit', $item->id)); ?>" alt="edit"><i
+                                                    class="text-primary" data-feather="edit"></i></a>
+                                        <?php endif; ?>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Vehicle Delete')): ?>
+                                            <a class="btn" href="javascript:void(0);" onclick="deleteItem(this)"
+                                                data-url="<?php echo e(route('vehicle.delete', $item->id)); ?>" data-item="Vehicle"
+                                                alt="delete"><i class="text-danger" data-feather="trash-2"></i></a>
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\projects\vlocus\resources\views/admin/vehicle/index.blade.php ENDPATH**/ ?>

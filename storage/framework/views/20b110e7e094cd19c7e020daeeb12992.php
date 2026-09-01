@@ -1,16 +1,14 @@
-@extends('layouts.app')
-
-@section('title')
+<?php $__env->startSection('title'); ?>
     Driver
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 
     <!--breadcrumb-->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
@@ -19,26 +17,26 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
                     <li class="breadcrumb-item">
-                        <a href="{{ route('dashboard') }}"><i class="bx bx-home-alt"></i></a>
+                        <a href="<?php echo e(route('dashboard')); ?>"><i class="bx bx-home-alt"></i></a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">Add New Driver</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
-            @can('Driver Create')
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Create')): ?>
                 <div class="d-flex align-items-center gap-2 justify-content-lg-end">
-                    <a class="btn btn-primary px-4" href="{{ route('driver.index') }}"><i
+                    <a class="btn btn-primary px-4" href="<?php echo e(route('driver.index')); ?>"><i
                             class="fadeIn animated bx bx-arrow-back"></i>Back</a>
                 </div>
-            @endcan
+            <?php endif; ?>
         </div>
     </div>
     <!--end breadcrumb-->
 
-    <form class="needs-validation" action="{{ route('driver.store') }}" method="post" novalidate
+    <form class="needs-validation" action="<?php echo e(route('driver.store')); ?>" method="post" novalidate
         enctype="multipart/form-data">
-        @csrf
+        <?php echo csrf_field(); ?>
         <div class="row">
             <div class="col-md-9">
 
@@ -49,7 +47,7 @@
                             <label class="col-md-3 col-form-label">Date Of Birth <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input type="date" class="form-control" name="date_of_birth" id="date_of_birth"
-                                    value="{{ old('date_of_birth') }}">
+                                    value="<?php echo e(old('date_of_birth')); ?>">
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -58,7 +56,7 @@
                             <div class="col-md-9">
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="driving_license_number"
-                                        id="driving_license_number" value="{{ old('driving_license_number') }}">
+                                        id="driving_license_number" value="<?php echo e(old('driving_license_number')); ?>">
                                     <button type="button" class="btn btn-grd-info text-light" id="verifyDlBtn">
                                         Fetch DL Details
                                     </button>
@@ -66,7 +64,7 @@
                                 <small id="dlVerifyStatus" class="d-block mt-1"></small>
                                 <input type="hidden" name="driving_license_verification_data"
                                     id="driving_license_verification_data"
-                                    value="{{ old('driving_license_verification_data') }}">
+                                    value="<?php echo e(old('driving_license_verification_data')); ?>">
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -89,7 +87,7 @@
                             and can be edited before saving.
                         </p>
 
-                        @include('admin.driver._dl_fields', ['data' => null])
+                        <?php echo $__env->make('admin.driver._dl_fields', ['data' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                     </div>
                 </div>
 
@@ -100,21 +98,21 @@
                             <label class="col-md-3 col-form-label">First Name <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" placeholder="Enter First name" name="first_name"
-                                    id="first_name" value="{{ old('first_name') }}" required>
+                                    id="first_name" value="<?php echo e(old('first_name')); ?>" required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Last Name <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" placeholder="Enter Last name" name="last_name"
-                                    id="last_name" value="{{ old('last_name') }}" required>
+                                    id="last_name" value="<?php echo e(old('last_name')); ?>" required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Email <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input type="email" class="form-control" name="email" id="email"
-                                    value="{{ old('email') }}" required>
+                                    value="<?php echo e(old('email')); ?>" required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -122,30 +120,30 @@
                             <div class="col-md-9">
                                 <select class="form-control input-height" name="gender" required>
                                     <option value selected disabled>Select...</option>
-                                    <option value="male" @if (old('gender') == 'male') selected @endif>Male</option>
-                                    <option value="female" @if (old('gender') == 'female') selected @endif>Female</option>
-                                    <option value="others" @if (old('gender') == 'others') selected @endif>Others</option>
+                                    <option value="male" <?php if(old('gender') == 'male'): ?> selected <?php endif; ?>>Male</option>
+                                    <option value="female" <?php if(old('gender') == 'female'): ?> selected <?php endif; ?>>Female</option>
+                                    <option value="others" <?php if(old('gender') == 'others'): ?> selected <?php endif; ?>>Others</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Mobile No. <span class="text-danger">*</span></label>
                             <div class="col-md-9">
-                                <input type="text" class="form-control" name="phone" value="{{ old('phone') }}" required>
+                                <input type="text" class="form-control" name="phone" value="<?php echo e(old('phone')); ?>" required>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Alternative Mobile No.</label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" name="opt_mobile_no"
-                                    value="{{ old('opt_mobile_no') }}">
+                                    value="<?php echo e(old('opt_mobile_no')); ?>">
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Address</label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" name="address" id="address"
-                                    value="{{ old('address') }}">
+                                    value="<?php echo e(old('address')); ?>">
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -164,7 +162,7 @@
                             <label class="col-md-3 col-form-label">Driving Exprience</label>
                             <div class="col-md-9">
                                 <input type="text" class="form-control" name="driving_exprience"
-                                    value="{{ old('driving_exprience') }}">
+                                    value="<?php echo e(old('driving_exprience')); ?>">
                             </div>
                         </div>
                     </div>
@@ -177,7 +175,7 @@
                             Verify the driver's Aadhaar (OTP) and PAN through BankU. Name / DOB / address fields above
                             are auto-filled from a successful verification when still blank.
                         </p>
-                        @include('admin.driver._kyc_fields', ['data' => null])
+                        <?php echo $__env->make('admin.driver._kyc_fields', ['data' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                     </div>
                 </div>
 
@@ -192,14 +190,14 @@
                                     <div class="form-group">
                                         <label class="col-form-label">Email</label>
                                         <input type="text" id="login-email" class="form-control"
-                                            value="{{ old('email') }}" readonly>
+                                            value="<?php echo e(old('email')); ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-12 mb-3">
                                     <div class="form-group">
                                         <label class="col-form-label">Password <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="password"
-                                            value="{{ old('password') }}" required>
+                                            value="<?php echo e(old('password')); ?>" required>
                                     </div>
                                 </div>
                             </div>
@@ -245,13 +243,13 @@
                     <div class="row">
                         <div class="card w-100">
                             <form action="" id="companyCreateForm" class="needs-validation" novalidate>
-                                @csrf
+                                <?php echo csrf_field(); ?>
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label class="form-label" for="name">Company Name <span
                                                 class="text-danger">*</span></label>
                                         <input type="text" class="form-control" placeholder="Enter Name"
-                                            name="company_name" value="{{ old('company_name') }}" required>
+                                            name="company_name" value="<?php echo e(old('company_name')); ?>" required>
                                         <div class="valid-feedback">Looks good!</div>
                                         <div class="invalid-feedback">Please enter company name.</div>
                                     </div>
@@ -260,14 +258,14 @@
                                             <label class="form-label" for="description">Email <span
                                                     class="text-danger">*</span></label>
                                             <input type="email" class="form-control" name="email" id="email"
-                                                value="{{ old('email') }}" placeholder="Enter Email" required>
+                                                value="<?php echo e(old('email')); ?>" placeholder="Enter Email" required>
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter a valid email.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label" for="phone">Phone <span
                                                     class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" value="{{ old('phone') }}"
+                                            <input type="text" class="form-control" value="<?php echo e(old('phone')); ?>"
                                                 name="phone" id="phone" placeholder="Enter phone" required>
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter phone.</div>
@@ -278,7 +276,7 @@
                                             <label class="form-label" for="trade_license">Registrations Number <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
-                                                value="{{ old('trade_license') }}" name="trade_license"
+                                                value="<?php echo e(old('trade_license')); ?>" name="trade_license"
                                                 id="trade_license" placeholder="Enter trade_license" required>
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter trade license.</div>
@@ -289,7 +287,7 @@
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" name="password"
-                                                        id="generated-password" value="{{ old('password') }}" required>
+                                                        id="generated-password" value="<?php echo e(old('password')); ?>" required>
                                                     <button type="button" class="btn btn-secondary"
                                                         id="generate-password">Generate</button>
                                                 </div>
@@ -299,7 +297,7 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <label class="form-label" for="address">Address</label>
-                                            <textarea name="address" class="form-control" placeholder="Enter Address" id="address">{{ old('address') }}</textarea>
+                                            <textarea name="address" class="form-control" placeholder="Enter Address" id="address"><?php echo e(old('address')); ?></textarea>
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please enter a valid address.</div>
                                         </div>
@@ -333,14 +331,14 @@
         </div>
     </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="{{ asset('assets/dashboard-assets/assets/plugins/select2/js/select2-custom.js') }}"></script>
+    <script src="<?php echo e(asset('assets/dashboard-assets/assets/plugins/select2/js/select2-custom.js')); ?>"></script>
 
-    @include('admin.driver._dl_scripts')
-    @include('admin.driver._kyc_scripts')
+    <?php echo $__env->make('admin.driver._dl_scripts', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    <?php echo $__env->make('admin.driver._kyc_scripts', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
     <script>
         $('#email').on('keyup', function() {
@@ -382,7 +380,7 @@
                 e.preventDefault();
                 let formData = new FormData(this);
                 $.ajax({
-                    url: '{{ route('driver.add_company') }}',
+                    url: '<?php echo e(route('driver.add_company')); ?>',
                     type: 'POST',
                     data: formData,
                     processData: false,
@@ -423,4 +421,6 @@
             });
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\projects\vlocus\resources\views/admin/driver/create.blade.php ENDPATH**/ ?>
