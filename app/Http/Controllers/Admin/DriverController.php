@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Services\BankU\BankUIdentityService;
 use App\Services\BankU\Exceptions\BankUConnectionException;
+use App\Services\Wallet\Exceptions\ApiCallDisabledException;
+use App\Services\Wallet\Exceptions\InsufficientWalletBalanceException;
+use PDF;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class DriverController extends Controller implements HasMiddleware
 {
@@ -29,9 +33,10 @@ class DriverController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:Driver Show', only: ['index','show']),
+            new Middleware('permission:Driver Show', only: ['index','show','downloadProfile']),
             new Middleware('permission:Driver Create', only: [
-                'create','store','verifyDrivingLicense','verifyPan','sendAadhaarOtp','verifyAadhaarOtp',
+                'create','store','kyc','updateKyc',
+                'verifyDrivingLicense','verifyPan','sendAadhaarOtp','verifyAadhaarOtp',
             ]),
             new Middleware('permission:Driver Edit', only: ['edit','update']),
             new Middleware('permission:Driver Delete', only: ['destroy']),
@@ -308,29 +313,20 @@ public function storeFromModal(Request $request)
     }
 }
 
+    /**
+     * Step 1 of driver creation: DL lookup + basic identity, all of which
+     * BankU's driving-license verify can supply. Email/phone/status/Aadhaar/
+     * PAN aren't collected here (BankU's DL response doesn't carry them) --
+     * they're finished on the driver.kyc page this redirects to.
+     */
     public function store(Request $request)
     {
-        // d($request->all());
-        // Validation Rules
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|regex:/^[a-zA-Z\s]+$/|max:255',
             'last_name' => 'required|regex:/^[a-zA-Z\s]+$/|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|digits:10|regex:/^[6789]/|unique:users,phone',
-            'aadhaar_number' => 'nullable|digits:12|unique:users,aadhar_card_number',
-            'pan_card_number' => 'nullable|regex:/[A-Z]{5}[0-9]{4}[A-Z]{1}/|unique:users,pan_card_number',
             'driving_license_number' => 'required|unique:drivers,driving_license_number',
-            'password' => 'required|min:8',
-            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'aadhar_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'pan_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'driver_license_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'status' => 'required|in:1,0'
-        ] + $this->dlValidationRules(), [
-            'profile_image.max' => 'The Profile Image must not be larger than 2 MB.',
-            'aadhar_image.max' => 'The Aadhar Image must not be larger than 2 MB.',
-            'pan_image.max' => 'The Pan Image must not be larger than 2 MB.',
-        ]);
+            'profile_photo_source' => 'nullable|string',
+        ] + $this->dlValidationRules());
 
         // Validation Failed
         if ($validator->fails()) {
@@ -339,31 +335,21 @@ public function storeFromModal(Request $request)
 
         // User Data
         $userData = [
-            'status' => $request->status,
+            'status' => 1,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'name' => $request->first_name . ' ' . $request->last_name,
             'date_of_birth' => format_date_for_db($request->date_of_birth),
-            'gender' => $request->gender,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'opt_mobile_no' => $request->opt_mobile_no,
             'address' => $request->address,
-            'password' => bcrypt($request->password),
-            'aadhar_card_number' => $request->aadhaar_number,
-            'pan_card_number' => $request->pan_card_number,
+            // No password field on the create form; matches storeFromModal's default.
+            'password' => bcrypt('12345678'),
         ];
 
-        $aadhaarVerificationData = $this->decodeVerificationPayload($request, 'aadhaar_verification_data');
-        if ($aadhaarVerificationData !== null) {
-            $userData['aadhaar_verification_data'] = $aadhaarVerificationData;
-            $userData['aadhaar_verified_at'] = now();
-        }
-
-        $panVerificationData = $this->decodeVerificationPayload($request, 'pan_verification_data');
-        if ($panVerificationData !== null) {
-            $userData['pan_verification_data'] = $panVerificationData;
-            $userData['pan_verified_at'] = now();
+        // BankU's DL response doesn't always include gender; leave it unset
+        // (falls back to the users.gender column default) rather than saving
+        // an empty string, which the enum column would reject.
+        if ($request->filled('gender')) {
+            $userData['gender'] = $request->gender;
         }
 
         // Create User
@@ -372,49 +358,108 @@ public function storeFromModal(Request $request)
         // Assign Role (Fix)
         $user->syncRoles('Driver');
 
-        // Handle Profile Image
-        if ($request->hasFile('profile_image')) {
-            $user->addMedia($request->file('profile_image'))->toMediaCollection('system-user-image');
-        }
+        // Profile picture comes from the driving-licence photo (see
+        // populateDlFields() / #profile_photo_source), not a manual upload.
+        // BankU currently returns a hosted image URL, but the field is
+        // populated defensively in case that ever changes to base64.
+        if ($request->filled('profile_photo_source')) {
+            $source = $request->input('profile_photo_source');
 
-        if ($request->hasFile('aadhar_image')) {
-            $user->addMedia($request->file('aadhar_image'))->toMediaCollection('system-user-aadhar');
-        }
-
-        if ($request->hasFile('pan_image')) {
-            $user->addMedia($request->file('pan_image'))->toMediaCollection('system-user-pan');
-        }
-
-
-        if ($user) {
-                  // Create Driver Record
-            $authUser = auth()->user();
-            $driverData = [
-                'user_id' => $user->id,
-                'driving_license_number' => $request->driving_license_number,
-                'driving_exprience' => $request->driving_exprience,
-                'company_id' => $authUser->companyId(),
-            ];
-
-            $drivingLicenseVerificationData = $this->decodeVerificationPayload($request, 'driving_license_verification_data');
-            $driverData = array_merge(
-                $driverData,
-                $this->dlColumnsForSave($request, $drivingLicenseVerificationData),
-            );
-            if ($drivingLicenseVerificationData !== null) {
-                $driverData['driving_license_verification_data'] = $drivingLicenseVerificationData;
-                $driverData['driving_license_verified_at'] = now();
+            try {
+                if (preg_match('/^https?:\/\//i', $source)) {
+                    $user->addMediaFromUrl($source)->toMediaCollection('system-user-image');
+                } else {
+                    $user->addMediaFromBase64($source)->toMediaCollection('system-user-image');
+                }
+            } catch (\Throwable $e) {
+                // Unreachable/malformed photo from BankU shouldn't block driver creation.
             }
-
-            $driver = Driver::create($driverData);
         }
 
+        // Create Driver Record
+        $authUser = auth()->user();
+        $driverData = [
+            'user_id' => $user->id,
+            'driving_license_number' => $request->driving_license_number,
+            'driving_exprience' => $request->driving_exprience,
+            'company_id' => $authUser->companyId(),
+        ];
 
-        if ($request->hasFile('driver_license_image')) {
-            $driver->addMedia($request->file('driver_license_image'))->toMediaCollection('driver-license');
+        $drivingLicenseVerificationData = $this->decodeVerificationPayload($request, 'driving_license_verification_data');
+        $driverData = array_merge(
+            $driverData,
+            $this->dlColumnsForSave($request, $drivingLicenseVerificationData),
+        );
+        if ($drivingLicenseVerificationData !== null) {
+            $driverData['driving_license_verification_data'] = $drivingLicenseVerificationData;
+            $driverData['driving_license_verified_at'] = now();
         }
 
-        return redirect()->route('driver.index')->with('success', $driver ? 'Driver Added Successfully' : 'Driver Not Added');
+        $driver = Driver::create($driverData);
+
+        return redirect()->route('driver.kyc', $driver->id)
+            ->with('success', 'Driver details saved. Complete KYC to finish onboarding.');
+    }
+
+    /**
+     * Step 2: email/phone/status + Aadhaar/PAN verification for a driver
+     * created via store(). Shown right after create, but revisitable any
+     * time to fix or complete KYC.
+     */
+    public function kyc($id)
+    {
+        $driver = Driver::with('user')->findOrFail($id);
+
+        if ($companyId = auth()->user()->companyId()) {
+            abort_unless((int) $driver->company_id === (int) $companyId, 404);
+        }
+
+        return view('admin.driver.kyc', ['driver' => $driver]);
+    }
+
+    public function updateKyc(Request $request, $id)
+    {
+        $driver = Driver::with('user')->findOrFail($id);
+        $user = $driver->user;
+
+        if ($companyId = auth()->user()->companyId()) {
+            abort_unless((int) $driver->company_id === (int) $companyId, 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'phone' => 'required|digits:10|regex:/^[6789]/|unique:users,phone,' . $user->id,
+            'aadhaar_number' => 'nullable|digits:12|unique:users,aadhar_card_number,' . $user->id,
+            'pan_card_number' => 'nullable|regex:/[A-Z]{5}[0-9]{4}[A-Z]{1}/|unique:users,pan_card_number,' . $user->id,
+            'status' => 'required|in:1,0',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator->errors())->withInput();
+        }
+
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+        $user->opt_mobile_no = $request->opt_mobile_no;
+        $user->status = $request->status;
+        $user->aadhar_card_number = $request->aadhaar_number;
+        $user->pan_card_number = $request->pan_card_number;
+
+        $aadhaarVerificationData = $this->decodeVerificationPayload($request, 'aadhaar_verification_data');
+        if ($aadhaarVerificationData !== null) {
+            $user->aadhaar_verification_data = $aadhaarVerificationData;
+            $user->aadhaar_verified_at = now();
+        }
+
+        $panVerificationData = $this->decodeVerificationPayload($request, 'pan_verification_data');
+        if ($panVerificationData !== null) {
+            $user->pan_verification_data = $panVerificationData;
+            $user->pan_verified_at = now();
+        }
+
+        $user->save();
+
+        return redirect()->route('driver.index')->with('success', 'Driver KYC completed successfully.');
     }
 
 
@@ -426,8 +471,13 @@ public function storeFromModal(Request $request)
             $result = $this->bankUIdentityService->verifyDrivingLicense(
                 $request->string('driving_license_number'),
                 $request->string('dob'),
+                auth()->user()->companyId(),
                 $verificationId,
             );
+        } catch (InsufficientWalletBalanceException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
+        } catch (ApiCallDisabledException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
         } catch (BankUConnectionException $e) {
             return $this->bankUUnavailableResponse();
         }
@@ -460,6 +510,42 @@ public function storeFromModal(Request $request)
         $driver->load('user');
 
         return view('admin.driver.show', compact('driver'));
+    }
+
+    /**
+     * Download a printable PDF summary of the driver's profile / DL details.
+     */
+    public function downloadProfile($id)
+    {
+        $driver = Driver::with('user')->findOrFail($id);
+        $user = $driver->user;
+
+        if ($companyId = auth()->user()->companyId()) {
+            abort_unless((int) $driver->company_id === (int) $companyId, 404);
+        }
+
+        // SVG, not PNG -- PNG rendering needs the imagick extension, which
+        // isn't installed here; SVG is pure XML and needs no image library.
+        $qrCodeSvg = QrCode::format('svg')->size(150)->margin(0)->generate(route('driver.show', $driver->id));
+
+        $photoPath = null;
+        $media = optional($user)->getFirstMedia('system-user-image');
+        if ($media && file_exists($media->getPath())) {
+            $photoPath = $media->getPath();
+        }
+
+        $html = view('admin.driver.pdf', [
+            'driver' => $driver,
+            'user' => $user,
+            'qrCodeDataUri' => 'data:image/svg+xml;base64,' . base64_encode($qrCodeSvg),
+            'photoPath' => $photoPath,
+        ])->render();
+
+        $pdf = PDF::loadHTML($html)->setPaper('a4', 'portrait')->set_option('isHtml5ParserEnabled', true);
+
+        $fileName = 'driver-profile-' . ($driver->driving_license_number ?: $driver->id) . '.pdf';
+
+        return $pdf->download($fileName);
     }
 
     public function edit($id)

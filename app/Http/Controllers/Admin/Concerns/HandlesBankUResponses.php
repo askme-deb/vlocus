@@ -35,6 +35,19 @@ trait HandlesBankUResponses
     }
 
     /**
+     * A company's wallet couldn't cover this call, or the API isn't enabled
+     * for them -- distinct from a 422 (BankU rejected the document) and a
+     * 503 (BankU unreachable): the call was never made at all.
+     */
+    private function bankUWalletBlockedResponse(string $message)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+        ], 402);
+    }
+
+    /**
      * Decode a verified-payload hidden field submitted alongside the form.
      * Returns null when the field is missing/empty/malformed, so the caller
      * only persists verification data that genuinely came from BankU.

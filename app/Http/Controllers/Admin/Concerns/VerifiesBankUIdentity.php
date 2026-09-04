@@ -6,6 +6,8 @@ use App\Http\Requests\Admin\SendAadhaarOtpRequest;
 use App\Http\Requests\Admin\VerifyAadhaarOtpRequest;
 use App\Http\Requests\Admin\VerifyPanRequest;
 use App\Services\BankU\Exceptions\BankUConnectionException;
+use App\Services\Wallet\Exceptions\ApiCallDisabledException;
+use App\Services\Wallet\Exceptions\InsufficientWalletBalanceException;
 
 /**
  * Shared PAN / Aadhaar verification endpoints for any admin controller that
@@ -20,7 +22,14 @@ trait VerifiesBankUIdentity
     public function verifyPan(VerifyPanRequest $request)
     {
         try {
-            $result = $this->bankUIdentityService->verifyPan($request->string('pan_card_number'));
+            $result = $this->bankUIdentityService->verifyPan(
+                $request->string('pan_card_number'),
+                auth()->user()->companyId(),
+            );
+        } catch (InsufficientWalletBalanceException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
+        } catch (ApiCallDisabledException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
         } catch (BankUConnectionException $e) {
             return $this->bankUUnavailableResponse();
         }
@@ -31,7 +40,14 @@ trait VerifiesBankUIdentity
     public function sendAadhaarOtp(SendAadhaarOtpRequest $request)
     {
         try {
-            $result = $this->bankUIdentityService->sendAadhaarOtp($request->string('aadhaar_number'));
+            $result = $this->bankUIdentityService->sendAadhaarOtp(
+                $request->string('aadhaar_number'),
+                auth()->user()->companyId(),
+            );
+        } catch (InsufficientWalletBalanceException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
+        } catch (ApiCallDisabledException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
         } catch (BankUConnectionException $e) {
             return $this->bankUUnavailableResponse();
         }

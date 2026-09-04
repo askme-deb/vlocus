@@ -128,6 +128,24 @@
 
         window.applyGenderFromApi(pick(['gender', 'sex']));
 
+        // Profile picture is sourced from the DL photo instead of a manual
+        // upload -- only touched when the page actually has that hidden
+        // field (i.e. opts in to this behaviour).
+        let $photoHidden = $('#profile_photo_source');
+        if ($photoHidden.length) {
+            let photo = pick([
+                'photo', 'photograph', 'user_photo', 'profile_photo',
+                'holder_photo', 'dl_photo', 'image', 'photo_base64', 'image_base64',
+            ]);
+            if (photo) {
+                // BankU returns this as a hosted image URL, not base64 --
+                // but fall back to treating it as base64 if that ever changes.
+                let photoSrc = /^(data:|https?:\/\/)/i.test(photo) ? photo : ('data:image/jpeg;base64,' + photo);
+                $photoHidden.val(photoSrc);
+                $('#blah').attr('src', photoSrc).css('display', 'block');
+            }
+        }
+
         if ($(payloadTarget).length) {
             $(payloadTarget).val(JSON.stringify(data));
         }

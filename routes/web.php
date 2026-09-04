@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\{
     SOSController,
     TrackingController,
     CompanyController,
+    CompanyWalletSettingsController,
     BranchController,
     EmployeeController,
     ReportController,
@@ -160,6 +161,9 @@ Route::prefix('admin')->group(function (){
                 Route::post("/update",'update')->name('update');
                 Route::delete("/delete/{routeId}",'destroy')->name('delete');
                 Route::post("/add-company",'add_company')->name('add_company');
+                Route::get("{id}/kyc",'kyc')->name('kyc');
+                Route::post("{id}/kyc",'updateKyc')->name('kyc.update');
+                Route::get("{id}/download",'downloadProfile')->name('download');
                 Route::post("/verify-license",'verifyDrivingLicense')->name('verifyLicense');
                 Route::post("/verify-pan",'verifyPan')->name('verifyPan');
                 Route::post("/aadhaar/send-otp",'sendAadhaarOtp')->name('aadhaarSendOtp');
@@ -185,6 +189,16 @@ Route::prefix('admin')->group(function (){
                 Route::post("/aadhaar/send-otp",'sendAadhaarOtp')->name('aadhaarSendOtp');
                 Route::post("/aadhaar/verify-otp",'verifyAadhaarOtp')->name('aadhaarVerifyOtp');
 
+            });
+        });
+
+        Route::controller(CompanyWalletSettingsController::class)->group(function () {
+            Route::prefix('company')->name('company.')->group(function () {
+                Route::get("my-wallet",'myWallet')->name('wallet.mine');
+                Route::get("{company}/wallet-settings",'edit')->name('walletSettings.edit');
+                Route::post("{company}/wallet-settings",'update')->name('walletSettings.update');
+                Route::get("{company}/wallet",'wallet')->name('wallet.show');
+                Route::post("{company}/wallet/top-up",'topUp')->name('wallet.topUp');
             });
         });
 

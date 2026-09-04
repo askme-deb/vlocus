@@ -3,7 +3,12 @@
 namespace App\Services\BankU;
 
 use App\Services\BankU\DataTransferObjects\BankUResponse;
+use App\Services\BankU\Exceptions\BankUConnectionException;
+use App\Services\Wallet\CompanyWalletService;
+use App\Models\CompanyWalletTransaction;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Closure;
 
 /**
  * Domain-facing wrapper around BankU's reseller identity verification APIs.
@@ -12,15 +17,22 @@ use Illuminate\Support\Str;
  */
 class BankUIdentityService
 {
-    public function __construct(private readonly BankUClient $client)
-    {
+    public function __construct(
+        private readonly BankUClient $client,
+        private readonly CompanyWalletService $wallet,
+    ) {
     }
 
-    public function sendAadhaarOtp(string $aadhaar): BankUResponse
+    /**
+     * Aadhaar is charged once, on a successful send-OTP -- verify-OTP (this
+     * method) confirms the code and is free, so it takes no $companyId.
+     */
+    public function sendAadhaarOtp(string $aadhaar, ?int $companyId): BankUResponse
     {
-        return $this->client->post('/api/reseller/v1/aadhaar/send-otp', [
-            'aadhaar' => $aadhaar,
-        ]);
+        return $this->chargeThenCall($companyId, 'aadhaar', fn () => $this->client->post(
+            '/api/reseller/v1/aadhaar/send-otp',
+            ['aadhaar' => $aadhaar],
+        ));
     }
 
     public function verifyAadhaarOtp(string $otp, string $refId): BankUResponse
@@ -31,34 +43,95 @@ class BankUIdentityService
         ]);
     }
 
-    public function verifyPan(string $pan): BankUResponse
+    public function verifyPan(string $pan, ?int $companyId): BankUResponse
     {
-        return $this->client->post('/api/reseller/v1/pan/verify', [
-            'pan' => $pan,
-        ]);
+        return $this->chargeThenCall($companyId, 'pan', fn () => $this->client->post(
+            '/api/reseller/v1/pan/verify',
+            ['pan' => $pan],
+        ));
     }
 
-    public function verifyRc(string $vehicleRegistrationNumber, ?string $verificationId = null): BankUResponse
+    public function verifyRc(string $vehicleRegistrationNumber, ?int $companyId, ?string $verificationId = null): BankUResponse
     {
-        return $this->client->post('/api/reseller/v1/identity/rc/verify', [
-            'vehicleRegistrationNumber' => $vehicleRegistrationNumber,
-            'verification_id' => $verificationId ?? ('rc_' . Str::uuid()),
-        ]);
+        $verificationId ??= 'rc_' . Str::uuid();
+
+        return $this->chargeThenCall($companyId, 'rc', fn () => $this->client->post(
+            '/api/reseller/v1/identity/rc/verify',
+            [
+                'vehicleRegistrationNumber' => $vehicleRegistrationNumber,
+                'verification_id' => $verificationId,
+            ],
+        ));
     }
 
-    public function verifyDrivingLicense(string $drivingLicenseNumber, string $dob, ?string $verificationId = null): BankUResponse
+    public function verifyDrivingLicense(string $drivingLicenseNumber, string $dob, ?int $companyId, ?string $verificationId = null): BankUResponse
     {
-        return $this->client->post('/api/reseller/v1/identity/driving-license/verify', [
-            'drivingLicenseNumber' => $drivingLicenseNumber,
-            'dob' => $dob,
-            'verification_id' => $verificationId ?? ('dl_' . Str::uuid()),
-        ]);
+        $verificationId ??= 'dl_' . Str::uuid();
+
+        return $this->chargeThenCall($companyId, 'driving_licence', fn () => $this->client->post(
+            '/api/reseller/v1/identity/driving-license/verify',
+            [
+                'drivingLicenseNumber' => $drivingLicenseNumber,
+                'dob' => $dob,
+                'verification_id' => $verificationId,
+            ],
+        ));
     }
 
-    public function verifyGstin(string $gstNumber): BankUResponse
+    public function verifyGstin(string $gstNumber, ?int $companyId): BankUResponse
     {
-        return $this->client->post('/api/reseller/v1/tax/gstin/verify', [
-            'gstNumber' => $gstNumber,
-        ]);
+        return $this->chargeThenCall($companyId, 'gstin', fn () => $this->client->post(
+            '/api/reseller/v1/tax/gstin/verify',
+            ['gstNumber' => $gstNumber],
+        ));
+    }
+
+    /**
+     * Charge the company's wallet, then make the BankU call outside the
+     * charge's DB transaction (never hold a lock across a slow HTTP call).
+     * Refunds the charge if the call fails to connect or BankU rejects it,
+     * so a company is only ever left debited for a call that actually
+     * succeeded. $companyId === null (Super Admin acting with no company
+     * context) skips wallet gating entirely -- there's no wallet to charge.
+     *
+     * @throws \App\Services\Wallet\Exceptions\ApiCallDisabledException
+     * @throws \App\Services\Wallet\Exceptions\InsufficientWalletBalanceException
+     */
+    private function chargeThenCall(?int $companyId, string $apiKey, Closure $makeCall): BankUResponse
+    {
+        if ($companyId === null) {
+            return $makeCall();
+        }
+
+        $debit = $this->wallet->chargeForApiCall($companyId, $apiKey);
+
+        try {
+            $response = $makeCall();
+        } catch (BankUConnectionException $e) {
+            $this->refundQuietly($companyId, $apiKey, $debit);
+            throw $e;
+        }
+
+        if (! $response->success) {
+            $this->refundQuietly($companyId, $apiKey, $debit);
+        }
+
+        return $response;
+    }
+
+    private function refundQuietly(int $companyId, string $apiKey, CompanyWalletTransaction $debit): void
+    {
+        try {
+            $this->wallet->refund($companyId, $debit);
+        } catch (\Throwable $e) {
+            // A refund-write failure must not turn an already-handled BankU
+            // failure into a 500 -- log it for manual reconciliation instead.
+            Log::error('CompanyWalletService refund failed after a failed BankU call', [
+                'company_id' => $companyId,
+                'api_key' => $apiKey,
+                'debit_transaction_id' => $debit->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

@@ -189,7 +189,7 @@ Drivers
                                 <th>Role</th>
                                 <th>Registred Date</th>
                                 <th>Status</th>
-                                @canany(['Company Edit', 'Company Delete'])
+                                @canany(['Company Edit', 'Company Delete', 'Wallet Settings Show', 'Wallet Management Show'])
                                     <th>Action</th>
                                 @endcanany
                             </tr>
@@ -209,13 +209,23 @@ Drivers
                                     <td>{{ $user->getRoleNames()->first() }}</td>
                                     <td>{{ format_datetime($user->created_at) }}</td>
                                     <td>{!! check_status($user->status) !!}</td>
-                                    @canany(['Company Edit', 'Company Delete'])
+                                    @canany(['Company Edit', 'Company Delete', 'Wallet Settings Show', 'Wallet Management Show'])
                                     <td>
                                         {{-- <a href="{{ route('system-user.show', $user->id) }}" class="btn btn-icon btn-sm"
                                             title="View"><i class="text-info" data-feather="eye"></i></a> --}}
                                         @can('Company Edit')
                                             <a href="{{ route('company.edit', $user->id) }}" class="btn btn-icon btn-sm"
                                                 title="Edit"><i class="text-primary" data-feather="edit"></i></a>
+                                        @endcan
+                                        @can('Wallet Settings Show')
+                                            <a href="{{ route('company.walletSettings.edit', $user->id) }}"
+                                                class="btn btn-icon btn-sm" title="API Rate Settings"><i
+                                                    class="text-primary" data-feather="settings"></i></a>
+                                        @endcan
+                                        @can('Wallet Management Show')
+                                            <a href="{{ route('company.wallet.show', $user->id) }}"
+                                                class="btn btn-icon btn-sm" title="Wallet"><i class="text-success"
+                                                    data-feather="credit-card"></i></a>
                                         @endcan
                                         @can('Company Delete')
                                             <a class="btn" href="javascript:void(0);" onclick="deleteItem(this)"

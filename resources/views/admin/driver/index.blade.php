@@ -277,6 +277,13 @@ Drivers
                                     <td>{!! check_status($user->status) !!}</td>
                                     @canany(['Driver Show', 'Driver Edit', 'Driver Delete'])
                                     <td>
+                                        @can('Driver Create')
+                                            @if (! $user->email && optional($user->driver)->id)
+                                                <a href="{{ route('driver.kyc', $user->driver->id) }}"
+                                                    class="btn btn-icon btn-sm" title="Complete KYC"><i
+                                                        class="text-warning" data-feather="alert-circle"></i></a>
+                                            @endif
+                                        @endcan
                                         @can('Driver Show')
                                             @if (optional($user->driver)->id)
                                                 <a href="{{ route('driver.show', $user->driver->id) }}"

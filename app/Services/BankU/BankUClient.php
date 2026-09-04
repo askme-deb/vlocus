@@ -52,12 +52,48 @@ class BankUClient
             );
         }
 
+        $body = (array) $response->json();
+
         Log::info('BankU API response', [
             'endpoint' => $endpoint,
             'status' => $response->status(),
+            // Key shape only (never values) -- lets us see what a response
+            // actually contains (e.g. a photo field name) without logging PII.
+            'keys' => $this->keyShape($body),
+            // First 60 chars of the DL photo field, if present -- enough to
+            // tell whether it's a URL or raw/data-URI base64, without
+            // logging the full image data.
+            'photo_preview' => is_string($photo = data_get($body, 'data.details_of_driving_licence.photo'))
+                ? mb_substr($photo, 0, 60)
+                : null,
         ]);
 
         return BankUResponse::fromArray($response->status(), (array) $response->json());
+    }
+
+    /**
+     * Recursively collect an array's key names (not values), so response
+     * shapes can be logged/inspected without leaking PII. A numerically
+     * indexed list is summarised as its length plus its first item's keys.
+     */
+    private function keyShape(array $data, int $depth = 3): array|string
+    {
+        if ($depth <= 0) {
+            return array_is_list($data) ? 'list[' . count($data) . ']' : 'object';
+        }
+
+        if (array_is_list($data)) {
+            $firstItemShape = isset($data[0]) && is_array($data[0]) ? $this->keyShape($data[0], $depth - 1) : null;
+
+            return 'list[' . count($data) . ']' . ($firstItemShape ? ' of ' . json_encode($firstItemShape) : '');
+        }
+
+        $shape = [];
+        foreach ($data as $key => $value) {
+            $shape[$key] = is_array($value) ? $this->keyShape($value, $depth - 1) : gettype($value);
+        }
+
+        return $shape;
     }
 
     private function pendingRequest(string $idempotencyKey): PendingRequest

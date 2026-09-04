@@ -74,6 +74,7 @@
                 },
                 beforeSend: function () {
                     $btn.prop('disabled', true).text('Fetching...');
+                    $(document).trigger('banku:dl-fetch-start');
                 },
                 success: function (response) {
                     if (response.success) {
@@ -93,12 +94,18 @@
                         }
 
                         lockDlFields();
+
+                        // Lets a page opt into its own post-fetch behaviour
+                        // (e.g. auto-submitting the create form) without this
+                        // shared script assuming what that behaviour is.
+                        $(document).trigger('banku:dl-fetched', [data]);
                     } else {
                         let msg = response.message || 'Driving licence verification failed.';
                         $status.removeClass('text-success').addClass('text-danger').text(msg);
                         if (typeof round_error_noti === 'function') {
                             round_error_noti(msg);
                         }
+                        $(document).trigger('banku:dl-fetch-failed');
                     }
                 },
                 error: function (xhr) {
@@ -110,6 +117,7 @@
                     if (typeof round_error_noti === 'function') {
                         round_error_noti(msg);
                     }
+                    $(document).trigger('banku:dl-fetch-failed');
                 },
                 complete: function () {
                     if (!dlLocked) {

@@ -43,6 +43,28 @@
         }
     }
 
+    if (!function_exists('safe_format_date')) {
+        /**
+         * Format a date value that may be null, empty, or in an
+         * unpredictable upstream format (e.g. BankU RC fields, which are
+         * stored as plain strings and shown back verbatim). Falls back to
+         * the raw value when it can't be parsed, and to '-' when empty.
+         */
+        function safe_format_date($value, $format = 'd M Y'){
+            $value = trim((string) $value);
+
+            if ($value === '') {
+                return '-';
+            }
+
+            try {
+                return Carbon::parse($value)->format($format);
+            } catch (\Throwable $e) {
+                return $value;
+            }
+        }
+    }
+
 
     if (!function_exists('get_weeks_in_this_month')){
         function get_weeks_in_this_month(){

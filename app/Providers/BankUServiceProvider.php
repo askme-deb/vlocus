@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\BankU\BankUClient;
 use App\Services\BankU\BankUIdentityService;
+use App\Services\Wallet\CompanyWalletService;
 use Illuminate\Support\ServiceProvider;
 
 class BankUServiceProvider extends ServiceProvider
@@ -25,7 +26,8 @@ class BankUServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(BankUIdentityService::class, fn ($app) => new BankUIdentityService(
-            $app->make(BankUClient::class)
+            $app->make(BankUClient::class),
+            $app->make(CompanyWalletService::class),
         ));
     }
 }

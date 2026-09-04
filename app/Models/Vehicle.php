@@ -107,6 +107,21 @@ class Vehicle extends Model implements HasMedia
         'is_commercial' => 'Vehicle Is Commercial',
     ];
 
+    /**
+     * Subset of RC_FIELDS that hold dates. Stored as plain strings (upstream
+     * BankU formats vary), so display code should run them through
+     * safe_format_date() rather than assuming a Carbon-castable column.
+     */
+    public const RC_DATE_FIELDS = [
+        'registration_date',
+        'rc_expiry_date',
+        'tax_upto',
+        'insurance_upto',
+        'pucc_upto',
+        'permit_valid_upto',
+        'national_permit_upto',
+    ];
+
     public function layout()
     {
         return $this->belongsTo(VehicleLayout::class, 'layout_id', 'id');

@@ -208,6 +208,9 @@ table#example2 td {
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class='material-icons-outlined'>person_outline</i>Profile</a></li>
                                 <li><a class="dropdown-item" href="{{ route('settings') }}"><i class='material-icons-outlined'>settings</i>General Settings</a></li>
+                                @can('Wallet Show')
+                                    <li><a class="dropdown-item" href="{{ route('company.wallet.mine') }}"><i class='material-icons-outlined'>account_balance_wallet</i>My Wallet</a></li>
+                                @endcan
                                 @can('Role Show')
                                     <li><a class="dropdown-item" href="{{ route('roles') }}"><i class='material-icons-outlined'>supervisor_account</i>Roles</a></li>
                                 @endcan
@@ -324,9 +327,9 @@ table#example2 td {
                                 
                                         @canany(['Vehicle Type Show', 'Vehicle Type Create'])
                                             <li class="nav-item dropend">
-                                                <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
+                                                {{-- <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
                                                     href="javascript:;"><i class="material-icons-outlined">local_shipping</i>Vehicle
-                                                    Types</a>
+                                                    Types</a> --}}
                                                 <ul class="dropdown-menu submenu">
                                                     @can('Vehicle Type Show')
                                                         <li><a class="dropdown-item" href="{{ route('vehicle-type.index') }}"><i
@@ -363,10 +366,10 @@ table#example2 td {
                                         @endcan
                                         @canany(['Brand Show', 'Brand Create'])
                                             <li class="nav-item dropend">
-                                                <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
+                                                {{-- <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
                                                     href="javascript:;"><i
-                                                        class="material-icons-outlined">branding_watermark</i>Brand</a>
-                                                <ul class="dropdown-menu submenu">
+                                                        class="material-icons-outlined">branding_watermark</i>Brand</a> --}}
+                                                {{-- <ul class="dropdown-menu submenu">
                                                     @can('Brand Show')
                                                         <li><a class="dropdown-item" href="{{ route('brand.index') }}"><i
                                                                     class="material-icons-outlined">branding_watermark</i>List Brands
@@ -377,11 +380,11 @@ table#example2 td {
                                                                     class="material-icons-outlined">add_circle</i>Add Brand</a>
                                                         </li>
                                                     @endcan
-                                                </ul>
+                                                </ul> --}}
                                             </li>
                                         @endcan
                                         @canany(['Model Show', 'Model Create'])
-                                            <li class="nav-item dropend">
+                                            {{-- <li class="nav-item dropend">
                                                 <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
                                                     href="javascript:;"><i class="material-icons-outlined">style</i>Model</a>
                                                 <ul class="dropdown-menu submenu">
@@ -396,7 +399,7 @@ table#example2 td {
                                                         </li>
                                                     @endcan
                                                 </ul>
-                                            </li>
+                                            </li> --}}
                                         @endcan
                                         @canany(['Color Show', 'Color Create'])
                                             <!--<li class="nav-item dropend">-->

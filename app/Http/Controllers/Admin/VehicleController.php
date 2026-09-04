@@ -24,6 +24,8 @@ use App\Models\Journey;
 
 use App\Services\BankU\BankUIdentityService;
 use App\Services\BankU\Exceptions\BankUConnectionException;
+use App\Services\Wallet\Exceptions\ApiCallDisabledException;
+use App\Services\Wallet\Exceptions\InsufficientWalletBalanceException;
 
 use Carbon\Carbon;
 class VehicleController extends Controller implements HasMiddleware
@@ -186,7 +188,12 @@ class VehicleController extends Controller implements HasMiddleware
         try {
             $result = $this->bankUIdentityService->verifyRc(
                 $request->string('vehicle_registration_number'),
+                auth()->user()->companyId(),
             );
+        } catch (InsufficientWalletBalanceException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
+        } catch (ApiCallDisabledException $e) {
+            return $this->bankUWalletBlockedResponse($e->getMessage());
         } catch (BankUConnectionException $e) {
             return $this->bankUUnavailableResponse();
         }
@@ -278,7 +285,7 @@ public function storeFromModal(Request $request)
         $vehicle = Vehicle::create($data);
 
         if ($vehicle->id) {
-            return redirect()->route('vehicle.index')->with(['success' => 'Vehicle Created Successfully']);
+            return redirect()->route('vehicle.show', $vehicle->id)->with(['success' => 'Vehicle Created Successfully']);
         }
 
         return back()->with(['error' => 'Vehicle Not Created']);

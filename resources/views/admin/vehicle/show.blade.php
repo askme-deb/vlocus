@@ -64,6 +64,8 @@
                                     $rows[$label] = is_null($data->is_commercial)
                                         ? null
                                         : ($data->is_commercial ? 'TRUE = YES' : 'FALSE = NO');
+                                } elseif (in_array($key, \App\Models\Vehicle::RC_DATE_FIELDS, true)) {
+                                    $rows[$label] = $data->{$key} ? safe_format_date($data->{$key}) : null;
                                 } else {
                                     $rows[$label] = $data->{$key};
                                 }
@@ -86,10 +88,10 @@
             </div>
 
             @if (!empty($data->rc_verification_data))
-                <details class="mt-4">
+                {{-- <details class="mt-4">
                     <summary class="text-muted" style="cursor:pointer;">Raw BankU RC response</summary>
                     <pre class="bg-light-subtle border rounded p-3 mt-2" style="max-height:400px;overflow:auto;">{{ json_encode($data->rc_verification_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
-                </details>
+                </details> --}}
             @endif
         </div>
     </div>

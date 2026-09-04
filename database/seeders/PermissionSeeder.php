@@ -48,6 +48,12 @@ class PermissionSeeder extends Seeder
             'Company Edit',
             'Company Delete',
 
+            'Wallet Settings Show',
+            'Wallet Settings Edit',
+            'Wallet Management Show',
+            'Wallet Management Edit',
+            'Wallet Show',
+
             'Contact Us Show',
             'Contact Us Delete',
 

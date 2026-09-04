@@ -250,6 +250,7 @@
                                 <th>Vehicle Class</th>
                                 <th>RC Status</th>
                                 <th>Insurance Upto</th>
+                                <th>PUCC Upto</th>
                                 <th>Verified</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -264,7 +265,8 @@
                                     <td>{{ $item->owner_name ?? '-' }}</td>
                                     <td>{{ $item->vehicle_class ?? '-' }}</td>
                                     <td>{{ $item->rc_status ?? '-' }}</td>
-                                    <td>{{ $item->insurance_upto ?? '-' }}</td>
+                                    <td>{{ safe_format_date($item->insurance_upto) }}</td>
+                                    <td>{{ safe_format_date($item->pucc_upto) }}</td>
                                     <td>
                                         @if ($item->rc_verified_at)
                                             <span class="badge bg-success text-light">Verified</span>
