@@ -459,7 +459,7 @@ public function storeFromModal(Request $request)
 
         $user->save();
 
-        return redirect()->route('driver.index')->with('success', 'Driver KYC completed successfully.');
+        return redirect()->route('driver.bank.edit', $driver)->with('success', 'Driver KYC saved. Add bank account details to continue.');
     }
 
 
@@ -472,6 +472,7 @@ public function storeFromModal(Request $request)
                 $request->string('driving_license_number'),
                 $request->string('dob'),
                 auth()->user()->companyId(),
+                auth()->id(),
                 $verificationId,
             );
         } catch (InsufficientWalletBalanceException $e) {

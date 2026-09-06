@@ -161,6 +161,9 @@ Route::prefix('admin')->group(function (){
                 Route::post("/update",'update')->name('update');
                 Route::delete("/delete/{routeId}",'destroy')->name('delete');
                 Route::post("/add-company",'add_company')->name('add_company');
+                Route::post('{driver}/bank/status', [\App\Http\Controllers\Admin\DriverBankAccountController::class, 'checkStatus'])->name('bank.status');
+                Route::get('{driver}/bank', [\App\Http\Controllers\Admin\DriverBankAccountController::class, 'edit'])->name('bank.edit');
+                Route::post('{driver}/bank', [\App\Http\Controllers\Admin\DriverBankAccountController::class, 'store'])->name('bank.store');
                 Route::get("{id}/kyc",'kyc')->name('kyc');
                 Route::post("{id}/kyc",'updateKyc')->name('kyc.update');
                 Route::get("{id}/download",'downloadProfile')->name('download');

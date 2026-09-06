@@ -208,9 +208,6 @@ table#example2 td {
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class='material-icons-outlined'>person_outline</i>Profile</a></li>
                                 <li><a class="dropdown-item" href="{{ route('settings') }}"><i class='material-icons-outlined'>settings</i>General Settings</a></li>
-                                @can('Wallet Show')
-                                    <li><a class="dropdown-item" href="{{ route('company.wallet.mine') }}"><i class='material-icons-outlined'>account_balance_wallet</i>My Wallet</a></li>
-                                @endcan
                                 @can('Role Show')
                                     <li><a class="dropdown-item" href="{{ route('roles') }}"><i class='material-icons-outlined'>supervisor_account</i>Roles</a></li>
                                 @endcan
@@ -608,8 +605,15 @@ table#example2 td {
                     </li>
                     @endcanany
 
-                   
-
+                    @can('Wallet Show')
+                    <li class="nav-item" style="margin-right:10px;">
+                        <a class="nav-link {{ request()->routeIs('company.wallet.mine') ? 'active' : '' }}"
+                            href="{{ route('company.wallet.mine') }}">
+                            <div class="parent-icon"><i class="material-icons-outlined">account_balance_wallet</i></div>
+                            <div class="menu-title d-flex align-items-center">Wallet</div>
+                        </a>
+                    </li>
+                    @endcan
 
                     <!--<li class="nav-item ms-auto">-->
                     <!--    <form method="POST" action="{{ route('logout') }}" style="display: inline;">-->

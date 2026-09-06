@@ -11,14 +11,15 @@ use App\Services\Wallet\CompanyWalletService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Super-Admin-only administration of a company's BankU API rates
  * (enable/disable + amount per document type) and wallet (balance, manual
- * top-up, transaction history), plus a read-only self-view for the Company
- * role to check its own balance/history. Kept separate from
- * CompanyController, which carries the company's own onboarding/KYC
- * concerns.
+ * top-up, transaction history), plus a read-only self-view (myWallet())
+ * for Company/Branch/Employee to check their own balance/usage, scoped to
+ * what each role is allowed to see. Kept separate from CompanyController,
+ * which carries the company's own onboarding/KYC concerns.
  */
 class CompanyWalletSettingsController extends Controller implements HasMiddleware
 {
@@ -78,27 +79,118 @@ class CompanyWalletSettingsController extends Controller implements HasMiddlewar
     }
 
     /**
-     * Read-only self-view for the Company role: their own balance and
-     * transaction history, no top-up form, no rate-settings link -- both
-     * of those stay behind Wallet Management Edit / Wallet Settings Show,
-     * which Company doesn't have.
+     * Read-only self-view: the company's balance, and a filterable
+     * (Branch / User / API type / date range) log + per-user statement of
+     * API calls made under the company -- no amounts, no rate-settings
+     * link, both of which stay behind Wallet Management Edit / Wallet
+     * Settings Show, which none of Company/Branch/Employee have.
+     *
+     * What's actually visible is scoped by the acting user's own role,
+     * enforced here server-side (not merely as filter defaults, so it
+     * can't be bypassed by editing the query string):
+     *   - Company: everything under the company.
+     *   - Branch:  only itself + its own employees.
+     *   - Employee: only their own activity.
      */
-    public function myWallet()
+    public function myWallet(Request $request)
     {
-        $companyId = auth()->user()->companyId();
+        $actingUser = auth()->user();
+        $companyId = $actingUser->companyId();
         abort_unless($companyId, 403);
 
         $company = User::findOrFail($companyId);
 
-        return $this->renderWallet($company, selfView: true);
+        $isBranch = $actingUser->hasRole('Branch');
+        $isEmployee = $actingUser->hasRole('Employee');
+
+        // Locked (non-overridable) scope for this viewer. null means "no
+        // restriction of this kind" (a Company sees the whole company).
+        $lockedBranchUserId = $isBranch ? $actingUser->id : null;
+        $lockedActorUserId = $isEmployee ? $actingUser->id : null;
+        $canFilterBranch = ! $isBranch && ! $isEmployee;
+        $canFilterUser = ! $isEmployee;
+
+        // The wallet balance is a company-wide financial figure -- only the
+        // Company role itself sees it; Branch/Employee only ever see usage
+        // counts, never money.
+        $canViewBalance = ! $isBranch && ! $isEmployee;
+
+        $filters = $request->only(['branch_user_id', 'actor_user_id', 'api_key', 'date_from', 'date_to']);
+        if ($lockedBranchUserId) {
+            $filters['branch_user_id'] = $lockedBranchUserId;
+        }
+        if ($lockedActorUserId) {
+            $filters['actor_user_id'] = $lockedActorUserId;
+        }
+
+        $usage = CompanyWalletTransaction::where('company_id', $companyId)
+            ->where('type', 'debit')
+            ->with(['actor', 'branchUser'])
+            ->when($filters['branch_user_id'] ?? null, fn ($q, $v) => $q->where('branch_user_id', $v))
+            ->when($filters['actor_user_id'] ?? null, fn ($q, $v) => $q->where('actor_user_id', $v))
+            ->when($filters['api_key'] ?? null, fn ($q, $v) => $q->where('reference_type', $v))
+            ->when($filters['date_from'] ?? null, fn ($q, $v) => $q->whereDate('created_at', '>=', $v))
+            ->when($filters['date_to'] ?? null, fn ($q, $v) => $q->whereDate('created_at', '<=', $v))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        // Dropdown data + the "users" list for the Usage Statement table,
+        // scoped to what this viewer is allowed to see at all.
+        if ($isEmployee) {
+            $branches = collect();
+            $users = User::where('id', $actingUser->id)->get(['id', 'name']);
+        } elseif ($isBranch) {
+            $branches = collect();
+            $users = User::where('id', $actingUser->id)->get(['id', 'name'])
+                ->merge(User::role('Employee')->whereHas('employee', fn ($q) => $q->where('branch_id', $actingUser->id))->get(['id', 'name']));
+        } else {
+            $branches = User::role('Branch')->whereHas('branch', fn ($q) => $q->where('company_id', $companyId))->get(['id', 'name']);
+            $users = User::where('id', $companyId)->get(['id', 'name'])
+                ->merge(User::role('Branch')->whereHas('branch', fn ($q) => $q->where('company_id', $companyId))->get(['id', 'name']))
+                ->merge(User::role('Employee')->whereHas('employee', fn ($q) => $q->where('company_id', $companyId))->get(['id', 'name']));
+        }
+
+        // Per-user statement: a count of calls per API type (+ total),
+        // scoped the same as $usage above. Never collapsed by
+        // actor_user_id/api_key from the request (only the locked value for
+        // an Employee is applied) -- those would defeat the per-user/
+        // per-type breakdown this table exists to show.
+        $counts = CompanyWalletTransaction::where('company_id', $companyId)
+            ->where('type', 'debit')
+            ->when($filters['branch_user_id'] ?? null, fn ($q, $v) => $q->where('branch_user_id', $v))
+            ->when($lockedActorUserId, fn ($q, $v) => $q->where('actor_user_id', $v))
+            ->when($filters['date_from'] ?? null, fn ($q, $v) => $q->whereDate('created_at', '>=', $v))
+            ->when($filters['date_to'] ?? null, fn ($q, $v) => $q->whereDate('created_at', '<=', $v))
+            ->select('actor_user_id', 'reference_type', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('actor_user_id', 'reference_type')
+            ->get();
+
+        $statement = [];
+        foreach ($counts as $row) {
+            $uid = $row->actor_user_id ?? 0;
+            $statement[$uid]['counts'][$row->reference_type] = (int) $row->cnt;
+            $statement[$uid]['total'] = ($statement[$uid]['total'] ?? 0) + (int) $row->cnt;
+        }
+
+        $wallet = CompanyWallet::firstOrNew(['company_id' => $companyId], ['balance' => 0]);
+
+        return view('admin.company.wallet', array_merge(
+            compact('company', 'wallet', 'usage', 'branches', 'users', 'filters', 'statement', 'canFilterBranch', 'canFilterUser', 'canViewBalance'),
+            ['transactions' => null, 'selfView' => true],
+        ));
     }
 
     private function renderWallet(User $company, bool $selfView)
     {
         $wallet = CompanyWallet::firstOrNew(['company_id' => $company->id], ['balance' => 0]);
-        $transactions = CompanyWalletTransaction::where('company_id', $company->id)
-            ->latest()
-            ->paginate(20);
+
+        // Transaction history (Type/Amount/Balance After/Description) is
+        // Super-Admin-only -- the view never renders it for a self-view, so
+        // skip the query entirely rather than paginating rows nobody sees.
+        $transactions = $selfView
+            ? null
+            : CompanyWalletTransaction::where('company_id', $company->id)->latest()->paginate(20);
 
         return view('admin.company.wallet', compact('company', 'wallet', 'transactions', 'selfView'));
     }

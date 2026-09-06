@@ -277,6 +277,13 @@ Drivers
                                     <td><?php echo check_status($user->status); ?></td>
                                     <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Driver Show', 'Driver Edit', 'Driver Delete'])): ?>
                                     <td>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Create')): ?>
+                                            <?php if(! $user->email && optional($user->driver)->id): ?>
+                                                <a href="<?php echo e(route('driver.kyc', $user->driver->id)); ?>"
+                                                    class="btn btn-icon btn-sm" title="Complete KYC"><i
+                                                        class="text-warning" data-feather="alert-circle"></i></a>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Driver Show')): ?>
                                             <?php if(optional($user->driver)->id): ?>
                                                 <a href="<?php echo e(route('driver.show', $user->driver->id)); ?>"

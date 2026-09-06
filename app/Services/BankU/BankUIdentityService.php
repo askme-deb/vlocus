@@ -27,9 +27,9 @@ class BankUIdentityService
      * Aadhaar is charged once, on a successful send-OTP -- verify-OTP (this
      * method) confirms the code and is free, so it takes no $companyId.
      */
-    public function sendAadhaarOtp(string $aadhaar, ?int $companyId): BankUResponse
+    public function sendAadhaarOtp(string $aadhaar, ?int $companyId, ?int $actorUserId = null): BankUResponse
     {
-        return $this->chargeThenCall($companyId, 'aadhaar', fn () => $this->client->post(
+        return $this->chargeThenCall($companyId, 'aadhaar', $actorUserId, fn () => $this->client->post(
             '/api/reseller/v1/aadhaar/send-otp',
             ['aadhaar' => $aadhaar],
         ));
@@ -43,19 +43,19 @@ class BankUIdentityService
         ]);
     }
 
-    public function verifyPan(string $pan, ?int $companyId): BankUResponse
+    public function verifyPan(string $pan, ?int $companyId, ?int $actorUserId = null): BankUResponse
     {
-        return $this->chargeThenCall($companyId, 'pan', fn () => $this->client->post(
+        return $this->chargeThenCall($companyId, 'pan', $actorUserId, fn () => $this->client->post(
             '/api/reseller/v1/pan/verify',
             ['pan' => $pan],
         ));
     }
 
-    public function verifyRc(string $vehicleRegistrationNumber, ?int $companyId, ?string $verificationId = null): BankUResponse
+    public function verifyRc(string $vehicleRegistrationNumber, ?int $companyId, ?int $actorUserId = null, ?string $verificationId = null): BankUResponse
     {
         $verificationId ??= 'rc_' . Str::uuid();
 
-        return $this->chargeThenCall($companyId, 'rc', fn () => $this->client->post(
+        return $this->chargeThenCall($companyId, 'rc', $actorUserId, fn () => $this->client->post(
             '/api/reseller/v1/identity/rc/verify',
             [
                 'vehicleRegistrationNumber' => $vehicleRegistrationNumber,
@@ -64,11 +64,11 @@ class BankUIdentityService
         ));
     }
 
-    public function verifyDrivingLicense(string $drivingLicenseNumber, string $dob, ?int $companyId, ?string $verificationId = null): BankUResponse
+    public function verifyDrivingLicense(string $drivingLicenseNumber, string $dob, ?int $companyId, ?int $actorUserId = null, ?string $verificationId = null): BankUResponse
     {
         $verificationId ??= 'dl_' . Str::uuid();
 
-        return $this->chargeThenCall($companyId, 'driving_licence', fn () => $this->client->post(
+        return $this->chargeThenCall($companyId, 'driving_licence', $actorUserId, fn () => $this->client->post(
             '/api/reseller/v1/identity/driving-license/verify',
             [
                 'drivingLicenseNumber' => $drivingLicenseNumber,
@@ -78,9 +78,36 @@ class BankUIdentityService
         ));
     }
 
-    public function verifyGstin(string $gstNumber, ?int $companyId): BankUResponse
+    public function verifyIfsc(string $ifsc, string $reference, string $idempotencyKey, ?int $companyId, ?int $actorUserId = null): BankUResponse
     {
-        return $this->chargeThenCall($companyId, 'gstin', fn () => $this->client->post(
+        return $this->chargeThenCall($companyId, 'ifsc', $actorUserId, fn () => $this->client->post(
+            '/api/reseller/v1/ifsc/verify',
+            ['ifsc' => $ifsc, 'verification_id' => $reference],
+            $idempotencyKey,
+        ));
+    }
+
+    public function verifyBankAccount(string $account, string $ifsc, string $name, string $reference, string $idempotencyKey, ?int $companyId, ?int $actorUserId = null): BankUResponse
+    {
+        return $this->chargeThenCall($companyId, 'bank', $actorUserId, fn () => $this->client->post(
+            '/api/reseller/v1/bank-account/verify-async',
+            ['bank_account' => $account, 'ifsc' => $ifsc, 'name' => $name, 'user_id' => str_replace('-', '_', $reference)],
+            $idempotencyKey,
+        ));
+    }
+
+    public function bankAccountStatus(string $reference): BankUResponse
+    {
+        // A status lookup is not a new account verification or wallet charge.
+        // The client generates a new key for this lookup and reuses it on HTTP retries.
+        return $this->client->post('/api/reseller/v1/bank-account/status', [
+            'user_id' => str_replace('-', '_', $reference),
+        ]);
+    }
+
+    public function verifyGstin(string $gstNumber, ?int $companyId, ?int $actorUserId = null): BankUResponse
+    {
+        return $this->chargeThenCall($companyId, 'gstin', $actorUserId, fn () => $this->client->post(
             '/api/reseller/v1/tax/gstin/verify',
             ['gstNumber' => $gstNumber],
         ));
@@ -97,17 +124,17 @@ class BankUIdentityService
      * @throws \App\Services\Wallet\Exceptions\ApiCallDisabledException
      * @throws \App\Services\Wallet\Exceptions\InsufficientWalletBalanceException
      */
-    private function chargeThenCall(?int $companyId, string $apiKey, Closure $makeCall): BankUResponse
+    private function chargeThenCall(?int $companyId, string $apiKey, ?int $actorUserId, Closure $makeCall): BankUResponse
     {
         if ($companyId === null) {
             return $makeCall();
         }
 
-        $debit = $this->wallet->chargeForApiCall($companyId, $apiKey);
+        $debit = $this->wallet->chargeForApiCall($companyId, $apiKey, $actorUserId);
 
         try {
             $response = $makeCall();
-        } catch (BankUConnectionException $e) {
+        } catch (BankUConnectionException | \Illuminate\Http\Client\RequestException $e) {
             $this->refundQuietly($companyId, $apiKey, $debit);
             throw $e;
         }

@@ -258,9 +258,7 @@ table#example2 td {
                                 
                                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Vehicle Type Show', 'Vehicle Type Create'])): ?>
                                             <li class="nav-item dropend">
-                                                <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
-                                                    href="javascript:;"><i class="material-icons-outlined">local_shipping</i>Vehicle
-                                                    Types</a>
+                                                
                                                 <ul class="dropdown-menu submenu">
                                                     <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Vehicle Type Show')): ?>
                                                         <li><a class="dropdown-item" href="<?php echo e(route('vehicle-type.index')); ?>"><i
@@ -297,40 +295,12 @@ table#example2 td {
                                         <?php endif; ?>
                                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Brand Show', 'Brand Create'])): ?>
                                             <li class="nav-item dropend">
-                                                <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
-                                                    href="javascript:;"><i
-                                                        class="material-icons-outlined">branding_watermark</i>Brand</a>
-                                                <ul class="dropdown-menu submenu">
-                                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Brand Show')): ?>
-                                                        <li><a class="dropdown-item" href="<?php echo e(route('brand.index')); ?>"><i
-                                                                    class="material-icons-outlined">branding_watermark</i>List Brands
-                                                            </a></li>
-                                                    <?php endif; ?>
-                                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Brand Create')): ?>
-                                                        <li><a class="dropdown-item" href="<?php echo e(route('brand.create')); ?>"><i
-                                                                    class="material-icons-outlined">add_circle</i>Add Brand</a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                </ul>
+                                                
+                                                
                                             </li>
                                         <?php endif; ?>
                                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Model Show', 'Model Create'])): ?>
-                                            <li class="nav-item dropend">
-                                                <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret"
-                                                    href="javascript:;"><i class="material-icons-outlined">style</i>Model</a>
-                                                <ul class="dropdown-menu submenu">
-                                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Model Show')): ?>
-                                                        <li><a class="dropdown-item" href="<?php echo e(route('model.index')); ?>"><i
-                                                                    class="material-icons-outlined">style</i>List Models
-                                                            </a></li>
-                                                    <?php endif; ?>
-                                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Model Create')): ?>
-                                                        <li><a class="dropdown-item" href="<?php echo e(route('model.create')); ?>"><i
-                                                                    class="material-icons-outlined">add_circle</i>Add Model</a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                </ul>
-                                            </li>
+                                            
                                         <?php endif; ?>
                                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['Color Show', 'Color Create'])): ?>
                                             <!--<li class="nav-item dropend">-->
@@ -539,8 +509,15 @@ table#example2 td {
                     </li>
                     <?php endif; ?>
 
-                   
-
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('Wallet Show')): ?>
+                    <li class="nav-item" style="margin-right:10px;">
+                        <a class="nav-link <?php echo e(request()->routeIs('company.wallet.mine') ? 'active' : ''); ?>"
+                            href="<?php echo e(route('company.wallet.mine')); ?>">
+                            <div class="parent-icon"><i class="material-icons-outlined">account_balance_wallet</i></div>
+                            <div class="menu-title d-flex align-items-center">Wallet</div>
+                        </a>
+                    </li>
+                    <?php endif; ?>
 
                     <!--<li class="nav-item ms-auto">-->
                     <!--    <form method="POST" action="<?php echo e(route('logout')); ?>" style="display: inline;">-->

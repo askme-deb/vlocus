@@ -23,7 +23,7 @@
     ];
 ?>
 
-<?php if (! $__env->hasRenderedOnce('dafc8c55-fdf1-48e5-87a4-2a43db436230')): $__env->markAsRenderedOnce('dafc8c55-fdf1-48e5-87a4-2a43db436230'); ?>
+<?php if (! $__env->hasRenderedOnce('b18df19e-a75d-4228-a8d2-f775892537ee')): $__env->markAsRenderedOnce('b18df19e-a75d-4228-a8d2-f775892537ee'); ?>
     <style>
         /* Compact multi-column layout for the DL block. Scoped to
            .dl-fields-grid so host pages don't flatten it. */

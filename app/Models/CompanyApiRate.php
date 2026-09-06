@@ -19,7 +19,11 @@ class CompanyApiRate extends Model
         'driving_licence' => 'Driving Licence',
         'rc' => 'RC',
         'gstin' => 'GSTIN',
+        'bank' => 'Bank Account',
+        'ifsc' => 'IFSC',
     ];
+
+    public const FILTER_TYPES = self::API_TYPES;
 
     protected $fillable = ['company_id', 'api_key', 'amount', 'is_enabled'];
 

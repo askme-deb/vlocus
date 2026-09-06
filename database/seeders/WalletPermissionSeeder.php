@@ -11,9 +11,13 @@ use Spatie\Permission\Models\Role;
  * - Wallet Settings (Show/Edit) and Wallet Management (Show/Edit) are
  *   Super-Admin-only: rate configuration and top-up are administrative
  *   actions a company never performs on itself.
- * - Wallet Show is a read-only self-view (balance + transaction history,
- *   no top-up, no rate editing) granted to the Company role only -- not
- *   Branch/Employee, per explicit decision.
+ * - Wallet Show is a read-only self-view (balance + a usage log/statement,
+ *   no top-up, no rate editing) granted to Company, Branch, and Employee.
+ *   CompanyWalletSettingsController::myWallet() further scopes what each
+ *   role actually sees within that page: Company sees everyone under it,
+ *   a Branch is locked to itself + its own employees, an Employee is
+ *   locked to just their own activity -- this permission only gates
+ *   reaching the page at all, not which rows within it are visible.
  *
  * Uses givePermissionTo() only (never syncPermissions()) so this is purely
  * additive and never touches a role's existing permission assignments.
@@ -38,8 +42,10 @@ class WalletPermissionSeeder extends Seeder
             $role->givePermissionTo(array_merge($adminOnly, ['Wallet Show']));
         }
 
-        if ($role = Role::where('name', 'Company')->first()) {
-            $role->givePermissionTo(['Wallet Show']);
+        foreach (['Company', 'Branch', 'Employee'] as $roleName) {
+            if ($role = Role::where('name', $roleName)->first()) {
+                $role->givePermissionTo(['Wallet Show']);
+            }
         }
     }
 }

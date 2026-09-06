@@ -20,10 +20,29 @@ class BankUResponse
         return new self(
             success: $success,
             statusCode: $statusCode,
-            message: $body['message'] ?? ($success ? 'Success' : 'Request failed.'),
+            message: $body['message'] ?? $body['error']['message'] ?? ($success ? 'Success' : 'Request failed.'),
             data: $body['data'] ?? [],
             raw: $body,
         );
+    }
+
+    public function bankAccountVerificationStatus(): ?string
+    {
+        if (! $this->success) {
+            return null;
+        }
+
+        $value = $this->data['account_status'] ?? $this->data['bank_account_status'] ?? $this->data['status'] ?? null;
+        if (! is_string($value)) {
+            return null;
+        }
+
+        return match (strtoupper(trim($value))) {
+            'VALID', 'VERIFIED' => 'verified',
+            'INVALID', 'FAILED', 'REJECTED' => 'failed',
+            'PENDING', 'PROCESSING', 'IN_PROGRESS', 'QUEUED' => 'pending',
+            default => null,
+        };
     }
 
     public function toArray(): array

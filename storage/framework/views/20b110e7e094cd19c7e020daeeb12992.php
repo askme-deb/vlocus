@@ -34,11 +34,10 @@
     </div>
     <!--end breadcrumb-->
 
-    <form class="needs-validation" action="<?php echo e(route('driver.store')); ?>" method="post" novalidate
-        enctype="multipart/form-data">
+    <form class="needs-validation" action="<?php echo e(route('driver.store')); ?>" method="post" novalidate>
         <?php echo csrf_field(); ?>
         <div class="row">
-            <div class="col-md-9">
+            <div class="col-md-12">
 
                 <div class="card mt-4">
                     <div class="card-header text-center">Driving Licence</div>
@@ -67,24 +66,10 @@
                                     value="<?php echo e(old('driving_license_verification_data')); ?>">
                             </div>
                         </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Driving Licence Image</label>
-                            <div class="col-md-9">
-                                <div class="mb-3">
-                                    <img class="img-thumbnail rounded me-2" id="blah4" alt="" width="200" src=""
-                                        data-holder-rendered="true" style="display: none;">
-                                </div>
-                                <div class="mb-0">
-                                    <input class="form-control" name="driver_license_image" type="file" id="imgInp4">
-                                </div>
-                            </div>
-                        </div>
-
                         <hr>
                         <p class="text-muted small mb-3">
                             Enter the Date of Birth and Driving Licence Number, then click
-                            <strong>Fetch DL Details</strong>. The fields below are populated from the BankU response
-                            and can be edited before saving.
+                            <strong>Fetch DL Details</strong>. 
                         </p>
 
                         <?php echo $__env->make('admin.driver._dl_fields', ['data' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
@@ -109,34 +94,18 @@
                             </div>
                         </div>
                         <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Email <span class="text-danger">*</span></label>
+                            <label class="col-md-3 col-form-label">Gender</label>
                             <div class="col-md-9">
-                                <input type="email" class="form-control" name="email" id="email"
-                                    value="<?php echo e(old('email')); ?>" required>
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Gender <span class="text-danger">*</span></label>
-                            <div class="col-md-9">
-                                <select class="form-control input-height" name="gender" required>
-                                    <option value selected disabled>Select...</option>
+                                <select class="form-control input-height" name="gender">
+                                    <option value="" <?php if(! old('gender')): ?> selected <?php endif; ?>>Select... (defaults to Male)</option>
                                     <option value="male" <?php if(old('gender') == 'male'): ?> selected <?php endif; ?>>Male</option>
                                     <option value="female" <?php if(old('gender') == 'female'): ?> selected <?php endif; ?>>Female</option>
                                     <option value="others" <?php if(old('gender') == 'others'): ?> selected <?php endif; ?>>Others</option>
                                 </select>
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Mobile No. <span class="text-danger">*</span></label>
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" name="phone" value="<?php echo e(old('phone')); ?>" required>
-                            </div>
-                        </div>
-                        <div class="form-group row mb-3">
-                            <label class="col-md-3 col-form-label">Alternative Mobile No.</label>
-                            <div class="col-md-9">
-                                <input type="text" class="form-control" name="opt_mobile_no"
-                                    value="<?php echo e(old('opt_mobile_no')); ?>">
+                                <small class="d-block text-muted mt-1">
+                                    Auto-filled after <strong>Fetch DL Details</strong> when BankU returns it; not every
+                                    licence response includes gender. Can be corrected here or on the KYC page.
+                                </small>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -149,13 +118,13 @@
                         <div class="form-group row mb-3">
                             <label class="col-md-3 col-form-label">Profile Picture</label>
                             <div class="col-md-9">
-                                <div class="mb-3">
-                                    <img class="img-thumbnail rounded me-2" id="blah" alt="" width="200" src=""
-                                        data-holder-rendered="true" style="display: none;">
-                                </div>
-                                <div class="mb-0">
-                                    <input class="form-control" name="profile_image" type="file" id="imgInp">
-                                </div>
+                                <img class="img-thumbnail rounded" id="blah" alt="" width="200" src=""
+                                    data-holder-rendered="true" style="display: none;">
+                                <small class="d-block text-muted mt-1">
+                                    Auto-filled from the driving licence photo after <strong>Fetch DL Details</strong>.
+                                </small>
+                                <input type="hidden" name="profile_photo_source" id="profile_photo_source"
+                                    value="<?php echo e(old('profile_photo_source')); ?>">
                             </div>
                         </div>
                         <div class="form-group row mb-3">
@@ -165,67 +134,18 @@
                                     value="<?php echo e(old('driving_exprience')); ?>">
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="card mt-4">
-                    <div class="card-header text-center">Driver KYC</div>
-                    <div class="card-body">
                         <p class="text-muted small mb-3">
-                            Verify the driver's Aadhaar (OTP) and PAN through BankU. Name / DOB / address fields above
-                            are auto-filled from a successful verification when still blank.
+                            Email, mobile number, status and Aadhaar/PAN verification are completed on the
+                            <strong>Driver KYC</strong> page after this step.
                         </p>
-                        <?php echo $__env->make('admin.driver._kyc_fields', ['data' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                        <div class="d-md-flex d-grid align-items-center gap-3">
+                            <button type="submit" class="btn btn-grd-primary px-4 text-light">Submit</button>
+                            <button type="reset" class="btn btn-grd-info px-4 text-light">Reset</button>
+                        </div>
                     </div>
                 </div>
 
-            </div>
-            <div class="col-md-3">
-                <div class="row">
-                    <div class="card mt-4">
-                        <div class="card-header text-center">Account Information</div>
-                        <div class="card-body">
-                            <div class="row clearfix">
-                                <div class="col-sm-12 mb-3">
-                                    <div class="form-group">
-                                        <label class="col-form-label">Email</label>
-                                        <input type="text" id="login-email" class="form-control"
-                                            value="<?php echo e(old('email')); ?>" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-sm-12 mb-3">
-                                    <div class="form-group">
-                                        <label class="col-form-label">Password <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="password"
-                                            value="<?php echo e(old('password')); ?>" required>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header text-center">Publish</div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label mb-3 d-flex">Status</label>
-                                <div class="form-check form-check-inline">
-                                    <input type="radio" id="customRadioInline1" name="status" class="form-check-input"
-                                        value="1" checked>
-                                    <label class="form-check-label" for="customRadioInline1">Active</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input type="radio" id="customRadioInline2" name="status" class="form-check-input"
-                                        value="0">
-                                    <label class="form-check-label" for="customRadioInline2">Inactive</label>
-                                </div>
-                            </div>
-                            <div class="d-md-flex d-grid align-items-center gap-3">
-                                <button type="submit" class="btn btn-grd-primary px-4 text-light">Submit</button>
-                                <button type="reset" class="btn btn-grd-info px-4 text-light">Reset</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </form>
@@ -331,6 +251,32 @@
         </div>
     </div>
 
+    <style>
+        #dlFetchOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, .85);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #dlFetchOverlay .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        #dlFetchOverlay span {
+            font-weight: 600;
+            color: #475569;
+        }
+    </style>
+    <div id="dlFetchOverlay">
+        <div class="spinner-border text-primary" role="status"></div>
+        <span id="dlFetchOverlayText">Fetching driving licence details&hellip;</span>
+    </div>
+
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('scripts'); ?>
@@ -338,27 +284,37 @@
     <script src="<?php echo e(asset('assets/dashboard-assets/assets/plugins/select2/js/select2-custom.js')); ?>"></script>
 
     <?php echo $__env->make('admin.driver._dl_scripts', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
-    <?php echo $__env->make('admin.driver._kyc_scripts', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
     <script>
-        $('#email').on('keyup', function() {
-            $('#login-email').val($(this).val());
+        // Blocks the whole page behind #dlFetchOverlay for the DL fetch and
+        // auto-submits this (DL-only) form once it succeeds, so the driver
+        // is created immediately -- no separate manual Submit step. Events
+        // are dispatched by _dl_scripts.blade.php around the fetch AJAX.
+        $(document).on('banku:dl-fetch-start', function () {
+            $('#dlFetchOverlayText').text('Fetching driving licence details…');
+            $('#dlFetchOverlay').css('display', 'flex');
         });
 
-        // Profile picture + driving-licence image live previews.
-        [
-            ['#imgInp', '#blah'],
-            ['#imgInp4', '#blah4']
-        ].forEach(function(pair) {
-            $(pair[0]).on('change', function() {
-                if (this.files && this.files[0]) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        $(pair[1]).attr('src', e.target.result).css('display', 'block');
-                    };
-                    reader.readAsDataURL(this.files[0]);
+        $(document).on('banku:dl-fetch-failed', function () {
+            $('#dlFetchOverlay').hide();
+        });
+
+        $(document).on('banku:dl-fetched', function () {
+            let $form = $('#verifyDlBtn').closest('form');
+            if (!$form.length) return;
+
+            $('#dlFetchOverlayText').text('Details fetched. Submitting…');
+
+            if ($form[0].checkValidity() === false) {
+                $form.addClass('was-validated');
+                $('#dlFetchOverlay').hide();
+                if (typeof round_error_noti === 'function') {
+                    round_error_noti('Please complete the required fields before submitting.');
                 }
-            });
+                return;
+            }
+
+            $form.trigger('submit');
         });
 
         var genBtn = document.getElementById('generate-password');

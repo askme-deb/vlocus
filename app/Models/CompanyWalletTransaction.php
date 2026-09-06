@@ -15,6 +15,8 @@ class CompanyWalletTransaction extends Model
         'reference_type',
         'reference_id',
         'created_by',
+        'actor_user_id',
+        'branch_user_id',
     ];
 
     protected $casts = [
@@ -30,5 +32,17 @@ class CompanyWalletTransaction extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** The Company/Branch/Employee user who triggered an API-charge debit. */
+    public function actor()
+    {
+        return $this->belongsTo(User::class, 'actor_user_id');
+    }
+
+    /** The Branch user the actor belongs to (null for a Company actor). */
+    public function branchUser()
+    {
+        return $this->belongsTo(User::class, 'branch_user_id');
     }
 }

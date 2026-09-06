@@ -44,7 +44,9 @@
         </div>
     </div>
     <!--end breadcrumb-->
-
+    @can('Driver Create')
+        <a class="btn btn-outline-primary mb-3" href="{{ route('driver.bank.edit', $driver) }}">Bank Account</a>
+    @endcan
     <div class="row">
         <div class="col-lg-4">
             <div class="card mt-4">
@@ -78,6 +80,11 @@
                             @endif
                         </div>
                         <p class="text-muted mb-2">Number: <span class="fw-semibold">{{ optional($user)->aadhar_card_number ?: '—' }}</span></p>
+                        @can('Driver Create')
+                            @if (!optional($user)->aadhaar_verified_at)
+                                <a class="btn btn-sm btn-outline-primary mb-2" href="{{ route('driver.kyc', $driver->id) }}#aadhaar_number">Reverify</a>
+                            @endif
+                        @endcan
                         @if (!empty(optional($user)->aadhaar_verification_data))
                             {{-- <details class="mt-2">
                                 <summary class="text-muted" style="cursor:pointer;">Raw BankU Aadhaar response</summary>
@@ -99,6 +106,11 @@
                             @endif
                         </div>
                         <p class="text-muted mb-2">Number: <span class="fw-semibold">{{ optional($user)->pan_card_number ?: '—' }}</span></p>
+                        @can('Driver Create')
+                            @if (!optional($user)->pan_verified_at)
+                                <a class="btn btn-sm btn-outline-primary mb-2" href="{{ route('driver.kyc', $driver->id) }}#pan_card_number">Reverify</a>
+                            @endif
+                        @endcan
                         @if (!empty(optional($user)->pan_verification_data))
                             {{-- <details class="mt-2">
                                 <summary class="text-muted" style="cursor:pointer;">Raw BankU PAN response</summary>
@@ -107,6 +119,47 @@
                             </details> --}}
                         @endif
                     </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header"><span class="fw-bold">Bank Details</span></div>
+                <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success" role="status">{{ session('success') }}</div>
+                    @endif
+                    @error('bank')
+                        <div class="alert alert-danger" role="alert">{{ $message }}</div>
+                    @enderror
+                    @if ($bank = $driver->bankAccount)
+                        <dl class="row mb-0">
+                            @foreach ([
+                                'Bank Name' => $bank->bank_name,
+                                'Branch Name' => $bank->branch_name,
+                                'A/c Number' => $bank->account_number,
+                                'A/c Holder Name' => $bank->account_holder_name,
+                                'IFSC Code' => $bank->ifsc,
+                                'Verification Status' => ucfirst($bank->status),
+                                'Submitted At' => $bank->submitted_at?->format('d M Y, h:i A'),
+                                'Verified At' => $bank->verified_at?->format('d M Y, h:i A'),
+                            ] as $label => $value)
+                                <dt class="col-sm-5">{{ $label }}</dt>
+                                <dd class="col-sm-7 text-break">{{ $value ?: '-' }}</dd>
+                            @endforeach
+                        </dl>
+                    @else
+                        <p class="text-muted mb-0">No bank account details added yet.</p>
+                    @endif
+                    @can('Driver Create')
+                        @if ($bank && in_array($bank->status, ['pending', 'unknown', 'submitting']))
+                            <form action="{{ route('driver.bank.status', $driver) }}" method="post" class="mt-3">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Check Verification Status</button>
+                            </form>
+                        @elseif (!$bank || ($bank->status !== 'verified' && !$bank->verified_at))
+                            <a class="btn btn-sm btn-outline-primary mt-3" href="{{ route('driver.bank.edit', $driver) }}">Reverify</a>
+                        @endif
+                    @endcan
                 </div>
             </div>
         </div>

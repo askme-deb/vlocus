@@ -4,6 +4,7 @@ namespace App\Services\Wallet;
 
 use App\Models\CompanyApiRate;
 use App\Models\CompanyWalletTransaction;
+use App\Models\User;
 use App\Services\Wallet\Exceptions\ApiCallDisabledException;
 use App\Services\Wallet\Exceptions\InsufficientWalletBalanceException;
 use Illuminate\Support\Facades\DB;
@@ -21,10 +22,15 @@ class CompanyWalletService
      * evaluating that one statement, so there is no read-then-write gap for
      * a second transaction to race through.
      *
+     * $actorUserId is the Company/Branch/Employee user who triggered the
+     * call (Drivers never trigger these themselves -- they have no admin
+     * panel access), recorded on the debit row for the company's API-usage
+     * report. Null is fine (e.g. a scripted/system call with no acting user).
+     *
      * @throws ApiCallDisabledException
      * @throws InsufficientWalletBalanceException
      */
-    public function chargeForApiCall(int $companyId, string $apiKey): CompanyWalletTransaction
+    public function chargeForApiCall(int $companyId, string $apiKey, ?int $actorUserId = null): CompanyWalletTransaction
     {
         $rate = CompanyApiRate::where('company_id', $companyId)->where('api_key', $apiKey)->first();
 
@@ -35,8 +41,9 @@ class CompanyWalletService
         }
 
         $amount = (float) $rate->amount;
+        $branchUserId = $this->resolveBranchUserId($actorUserId);
 
-        return DB::transaction(function () use ($companyId, $apiKey, $amount) {
+        return DB::transaction(function () use ($companyId, $apiKey, $amount, $actorUserId, $branchUserId) {
             $this->ensureWalletRow($companyId);
 
             // Zero-cost APIs always succeed and skip the guarded decrement
@@ -65,8 +72,38 @@ class CompanyWalletService
                 'balance_after' => $this->currentBalance($companyId),
                 'description' => ucfirst(str_replace('_', ' ', $apiKey)) . ' verification charge',
                 'reference_type' => $apiKey,
+                'actor_user_id' => $actorUserId,
+                'branch_user_id' => $branchUserId,
             ]);
         });
+    }
+
+    /**
+     * Resolve which Branch (a User row with role Branch) the given actor
+     * belongs to: the actor themselves if they ARE a Branch, or their
+     * assigned branch if they're an Employee. Null for a Company actor (no
+     * branch context) or a Driver (never an actor here in practice).
+     */
+    private function resolveBranchUserId(?int $actorUserId): ?int
+    {
+        if (! $actorUserId) {
+            return null;
+        }
+
+        $actor = User::find($actorUserId);
+        if (! $actor) {
+            return null;
+        }
+
+        if ($actor->hasRole('Branch')) {
+            return $actor->id;
+        }
+
+        if ($actor->hasRole('Employee')) {
+            return $actor->employee?->branch_id;
+        }
+
+        return null;
     }
 
     /**

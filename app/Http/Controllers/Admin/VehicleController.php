@@ -189,6 +189,7 @@ class VehicleController extends Controller implements HasMiddleware
             $result = $this->bankUIdentityService->verifyRc(
                 $request->string('vehicle_registration_number'),
                 auth()->user()->companyId(),
+                auth()->id(),
             );
         } catch (InsufficientWalletBalanceException $e) {
             return $this->bankUWalletBlockedResponse($e->getMessage());

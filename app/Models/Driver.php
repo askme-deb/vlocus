@@ -66,6 +66,11 @@ class Driver extends Model implements HasMedia
         'dl_tr_valid_to' => 'Valid Upto (Transport)',
     ];
 
+    public function bankAccount()
+    {
+        return $this->hasOne(DriverBankAccount::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

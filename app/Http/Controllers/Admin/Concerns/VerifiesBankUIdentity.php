@@ -25,6 +25,7 @@ trait VerifiesBankUIdentity
             $result = $this->bankUIdentityService->verifyPan(
                 $request->string('pan_card_number'),
                 auth()->user()->companyId(),
+                auth()->id(),
             );
         } catch (InsufficientWalletBalanceException $e) {
             return $this->bankUWalletBlockedResponse($e->getMessage());
@@ -43,6 +44,7 @@ trait VerifiesBankUIdentity
             $result = $this->bankUIdentityService->sendAadhaarOtp(
                 $request->string('aadhaar_number'),
                 auth()->user()->companyId(),
+                auth()->id(),
             );
         } catch (InsufficientWalletBalanceException $e) {
             return $this->bankUWalletBlockedResponse($e->getMessage());
