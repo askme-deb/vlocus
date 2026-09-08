@@ -402,8 +402,8 @@ td.d-flex .btn:last-child:hover{
                                 @foreach ($sos_alerts as $item)
                                     <tr>
                                         <td>{{ $i++ }}</td>
-                                        <td>{{ $item->driver->name }}</td>
-                                        <td>{{ $item->driver->phone  }}</td>
+                                        <td>{{ $item->driver?->name ?? 'N/A' }}</td>
+                                        <td>{{ $item->driver?->phone ?? 'N/A' }}</td>
                                         <td>{{ $item->message }}</td>
                                         <td>{{ $item->latitude  }}</td>
                                         <td>{{ $item->longitude  }}</td>

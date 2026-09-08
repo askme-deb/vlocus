@@ -5,6 +5,7 @@
 @section('css')
 <!-- Chart.js CDN (v4) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <style>
     :root {
@@ -780,6 +781,339 @@ h5{
 </style>
 
 
+<style>
+  /* ==========================================================
+     FILTER BAR — refined layout so Vehicle / Driver read clearly
+     ========================================================== */
+
+  /* Keep a clear gap between the logo and the filter card */
+  header {
+    gap: 24px !important;
+    flex-wrap: wrap !important;
+  }
+
+  header .brand {
+    flex: 0 0 auto;
+  }
+
+  header form.controls {
+    display: flex !important;
+    flex: 1 1 520px;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: flex-end !important;
+    gap: 10px !important;
+    padding: 6px !important;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border: 1px solid var(--light-border) !important;
+    border-radius: 16px !important;
+  }
+
+  /* Each field: label stacked above the input */
+  header form.controls .control {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: center;
+    gap: 5px !important;
+    background: #ffffff !important;
+    border: 1px solid var(--light-border) !important;
+    border-radius: 12px !important;
+    padding: 9px 16px !important;
+    flex: 1 1 150px;
+    min-width: 140px;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  header form.controls .control:hover {
+    border-color: #cbd5e1 !important;
+  }
+
+  header form.controls .control:focus-within {
+    border-color: var(--light-primary) !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+    transform: translateY(-1px);
+  }
+
+  header form.controls .control label,
+  header form.controls .control .small {
+    margin: 0 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #94a3b8 !important;
+    line-height: 1;
+  }
+
+  header form.controls .control:focus-within label {
+    color: var(--light-primary) !important;
+  }
+
+  /* Icon + field on one row */
+  header form.controls .control-field {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+  }
+
+  header form.controls .control-icon {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    color: #94a3b8;
+    transition: color .2s ease;
+  }
+
+  header form.controls .control:focus-within .control-icon {
+    color: var(--light-primary);
+  }
+
+  header form.controls .control input,
+  header form.controls .control select {
+    width: 100% !important;
+    border: 0 !important;
+    outline: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: var(--light-text-main) !important;
+    line-height: 1.4;
+    height: 22px;
+  }
+
+  header form.controls .control input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: .55;
+  }
+
+  /* Give the dropdowns real room + a visible caret */
+  header form.controls .control select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    padding-right: 20px !important;
+    text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right center !important;
+  }
+
+  /* Date fields need less room than the name dropdowns */
+  header form.controls .control:nth-child(1),
+  header form.controls .control:nth-child(2) {
+    flex: 1 1 140px;
+    min-width: 130px;
+  }
+
+  /* Vehicle / Driver get more room and grow to fill the bar */
+  header form.controls .control:nth-child(3),
+  header form.controls .control:nth-child(4) {
+    flex: 2 1 200px;
+    min-width: 180px;
+  }
+
+  header form.controls #vehicleSelect,
+  header form.controls #driverSelect {
+    min-width: 0;
+  }
+
+  header form.controls .control select option {
+    color: var(--light-text-main);
+    font-weight: 500;
+    padding: 8px 14px;
+    min-height: 34px;
+    line-height: 1.6;
+  }
+
+  header form.controls .control select option:checked,
+  header form.controls .control select option:hover {
+    background: #eff6ff;
+    color: var(--light-primary);
+  }
+
+  /* ---- Select2 (Vehicle / Driver) — real padded dropdown ---- */
+  header form.controls .control .select2-container {
+    width: 100% !important;
+    flex: 1 1 auto;
+  }
+
+  header form.controls .control .select2-container--default .select2-selection--single {
+    height: 22px;
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+  }
+
+  header form.controls .control .select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding: 0 18px 0 0;
+    color: var(--light-text-main);
+    font-weight: 600;
+    font-size: 13.5px;
+    line-height: 22px;
+  }
+
+  header form.controls .control .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 22px;
+    right: 0;
+  }
+
+  header form.controls .control .select2-container--default.select2-container--focus .select2-selection--single,
+  header form.controls .control .select2-container--default.select2-container--open .select2-selection--single {
+    border: 0;
+    box-shadow: none;
+  }
+
+  /* The floating results panel */
+  .select2-dropdown.filter-select2-dropdown {
+    border: 1px solid var(--light-border);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
+    overflow: hidden;
+    padding: 6px;
+  }
+
+  .filter-select2-dropdown .select2-results__options {
+    max-height: 280px;
+  }
+
+  .filter-select2-dropdown .select2-results__option {
+    padding: 10px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--light-text-main);
+    border-radius: 8px;
+  }
+
+  .filter-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background: #eff6ff;
+    color: var(--light-primary);
+  }
+
+  .filter-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background: var(--light-primary);
+    color: #fff;
+  }
+
+  .filter-select2-dropdown .select2-search--dropdown {
+    padding: 4px 4px 8px;
+  }
+
+  .filter-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid var(--light-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+    outline: none;
+  }
+
+  .filter-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: var(--light-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  /* Buttons match the field height */
+  header form.controls button.btn,
+  header form.controls a.ghost {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 46px;
+    padding: 0 22px !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 13.5px;
+  }
+
+  header form.controls button.btn svg,
+  header form.controls a.ghost svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  header form.controls a.ghost.is-disabled {
+    opacity: .45;
+    pointer-events: none;
+  }
+
+  /* Below the logo+bar side-by-side threshold: bar takes the full row */
+  @media (max-width: 1100px) {
+    header form.controls {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+  }
+
+  /* Tablet: two fields per row */
+  @media (max-width: 640px) {
+    header form.controls .control:nth-child(1),
+    header form.controls .control:nth-child(2),
+    header form.controls .control:nth-child(3),
+    header form.controls .control:nth-child(4) {
+      flex: 1 1 calc(50% - 5px);
+      min-width: 0;
+    }
+  }
+
+  /* Phone: everything stacks */
+  @media (max-width: 480px) {
+    header form.controls {
+      align-items: stretch !important;
+    }
+    header form.controls .control:nth-child(1),
+    header form.controls .control:nth-child(2),
+    header form.controls .control:nth-child(3),
+    header form.controls .control:nth-child(4) {
+      flex: 1 1 100%;
+      width: 100% !important;
+    }
+    header form.controls button.btn,
+    header form.controls a.ghost {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+  }
+
+  /* ==========================================================
+     PAGE OVERFLOW GUARDS — stop any wide child (charts, tables,
+     the filter bar) from forcing a horizontal page scrollbar
+     ========================================================== */
+  html, body { overflow-x: clip; max-width: 100%; }
+
+  .wrap { max-width: 100% !important; overflow-x: clip; }
+
+  header { max-width: 100%; }
+  header form.controls { max-width: 100%; }
+
+  /* The 1fr track defaults to min-content width; clamp it so the
+     grid can actually shrink and never overflows its parent. */
+  .layout {
+    grid-template-columns: 260px minmax(0, 1fr) !important;
+    max-width: 100%;
+  }
+
+  .content, main.content { min-width: 0 !important; max-width: 100%; }
+
+  .panel {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;   /* wide tables / charts scroll inside the panel */
+  }
+
+  .panel canvas,
+  .panel .apexcharts-canvas,
+  .panel svg { max-width: 100%; }
+
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr !important; }
+  }
+</style>
+
+
 @endsection
 
 @section('content')
@@ -792,34 +1126,57 @@ h5{
         </div>
 
         <form method="GET" action="{{ route('dashboard') }}" class="controls" aria-label="filters">
+            @php
+                $hasFilters = !empty($filters['start_date']) || !empty($filters['end_date'])
+                    || !empty($filters['vehicle_id']) || !empty($filters['driver_id']);
+            @endphp
+
             <div class="control">
                 <label class="small" for="dateFrom">From</label>
-                <input type="date" id="dateFrom" name="start_date" value="{{ $filters['start_date'] }}" />
+                <div class="control-field">
+                    <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <input type="date" id="dateFrom" name="start_date" value="{{ $filters['start_date'] }}" />
+                </div>
             </div>
             <div class="control">
                 <label class="small" for="dateTo">To</label>
-                <input type="date" id="dateTo" name="end_date" value="{{ $filters['end_date'] }}" />
+                <div class="control-field">
+                    <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <input type="date" id="dateTo" name="end_date" value="{{ $filters['end_date'] }}" />
+                </div>
             </div>
             <div class="control">
                 <label class="small" for="vehicleSelect">Vehicle</label>
-                <select id="vehicleSelect" name="vehicle_id">
-                    <option value="">All Vehicles</option>
-                    @foreach($vehicle as $v)
-                    <option value="{{ $v->id }}" {{ (string) $filters['vehicle_id'] === (string) $v->id ? 'selected' : '' }}>{{ $v->vehicle_number }}</option>
-                    @endforeach
-                </select>
+                <div class="control-field">
+                    <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <select id="vehicleSelect" name="vehicle_id">
+                        <option value="">All Vehicles</option>
+                        @foreach($vehicle as $v)
+                        <option value="{{ $v->id }}" {{ (string) $filters['vehicle_id'] === (string) $v->id ? 'selected' : '' }}>{{ $v->vehicle_number }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div class="control">
                 <label class="small" for="driverSelect">Driver</label>
-                <select id="driverSelect" name="driver_id">
-                    <option value="">All Drivers</option>
-                    @foreach($driver as $dr)
-                    <option value="{{ $dr->id }}" {{ (string) $filters['driver_id'] === (string) $dr->id ? 'selected' : '' }}>{{ $dr->name }}</option>
-                    @endforeach
-                </select>
+                <div class="control-field">
+                    <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <select id="driverSelect" name="driver_id">
+                        <option value="">All Drivers</option>
+                        @foreach($driver as $dr)
+                        <option value="{{ $dr->id }}" {{ (string) $filters['driver_id'] === (string) $dr->id ? 'selected' : '' }}>{{ $dr->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            <button type="submit" class="btn" id="applyFilters">Apply</button>
-            <a href="{{ route('dashboard') }}" class="ghost" id="resetFilters">Reset</a>
+            <button type="submit" class="btn" id="applyFilters">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <span>Apply</span>
+            </button>
+            <a href="{{ route('dashboard') }}" class="ghost {{ $hasFilters ? '' : 'is-disabled' }}" id="resetFilters">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+                <span>Reset</span>
+            </a>
         </form>
     </header>
 
@@ -1975,7 +2332,19 @@ h5{
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(function () {
+        if (typeof $.fn.select2 === 'function') {
+            $('#vehicleSelect, #driverSelect').select2({
+                width: '100%',
+                dropdownCssClass: 'filter-select2-dropdown',
+                minimumResultsForSearch: 6
+            });
+        }
+    });
+</script>
 
 
 <script>
