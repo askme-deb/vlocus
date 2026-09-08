@@ -140,6 +140,13 @@
         font-size: 18px !important;
     }
 }
+
+/* Highlight drivers whose driving-licence validity has expired */
+#example2 tbody tr.table-danger,
+#example2 tbody tr.table-danger > * {
+    background-color: #f8d7da !important;
+    color: #842029 !important;
+}
 </style>
 @extends('layouts.app')
 
@@ -252,7 +259,10 @@ Drivers
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Phone</th>
-                                <th>Role</th>
+                                <th>Licence No.</th>
+                                <th>Class Of Vehicle</th>
+                                <th>Valid Upto (Transport)</th>
+                                <th>Valid Upto (Non-Transport)</th>
                                 <th>Registred Date</th>
                                 <th>Status</th>
                                 @canany(['Driver Show', 'Driver Edit', 'Driver Delete'])
@@ -263,7 +273,27 @@ Drivers
                         <tbody>
                             
                             @foreach ($drivers as $user)
-                                <tr>
+                                @php
+                                    $driver = $user->driver;
+                                    $parseDate = function ($value) {
+                                        if (blank($value)) {
+                                            return null;
+                                        }
+                                        try {
+                                            return \Illuminate\Support\Carbon::parse($value);
+                                        } catch (\Exception $e) {
+                                            return null;
+                                        }
+                                    };
+                                    $prettyDate = fn ($value) => optional($parseDate($value))->format('d M Y')
+                                        ?? (blank($value) ? '—' : $value);
+
+                                    $trValidTo = $parseDate(optional($driver)->dl_tr_valid_to);
+                                    $ntValidTo = $parseDate(optional($driver)->dl_nt_valid_to);
+                                    $latestValidTo = collect([$trValidTo, $ntValidTo])->filter()->max();
+                                    $dlExpired = $latestValidTo !== null && $latestValidTo->isPast();
+                                @endphp
+                                <tr @class(['table-danger' => $dlExpired])>
                                     <td>{{ $loop->iteration }}</td>
                                     <td class="w60">
                                         <img class="avatar" width="50"
@@ -272,9 +302,14 @@ Drivers
                                     <td><span class="font-16">{{ $user->name }}</span></td>
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->phone }}</td>
-                                    <td>{{ $user->getRoleNames()->first() }}</td>
+                                    <td>{{ optional($driver)->driving_license_number ?: '—' }}</td>
+                                    <td>{{ optional($driver)->class_of_vehicle ?: '—' }}</td>
+                                    <td>{{ $prettyDate(optional($driver)->dl_tr_valid_to) }}</td>
+                                    <td>{{ $prettyDate(optional($driver)->dl_nt_valid_to) }}</td>
                                     <td>{{ format_datetime($user->created_at) }}</td>
-                                    <td>{!! check_status($user->status) !!}</td>
+                                    <td title="{{ $dlExpired ? 'Driving licence validity expired' : '' }}">
+                                        {!! check_status($user->status) !!}
+                                    </td>
                                     @canany(['Driver Show', 'Driver Edit', 'Driver Delete'])
                                     <td>
                                         @can('Driver Create')

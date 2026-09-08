@@ -140,6 +140,21 @@
         font-size: 18px !important;
     }
 }
+
+/* Highlight vehicles whose insurance / PUCC / RC validity has expired */
+#example2 tbody tr.table-danger,
+#example2 tbody tr.table-danger > * {
+    background-color: #f8d7da !important;
+    color: #842029 !important;
+}
+
+.compliance-expired-reason {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #842029;
+}
 </style>
 @extends('layouts.app')
 
@@ -247,10 +262,13 @@
                             <tr>
                                 <th>RC Number</th>
                                 <th>Owner Name</th>
-                                <th>Vehicle Class</th>
+                                <th>Model</th>
+                                <th>Financer</th>
                                 <th>RC Status</th>
+                                <th>Insurance Company</th>
                                 <th>Insurance Upto</th>
                                 <th>PUCC Upto</th>
+                                <th>RC Validity</th>
                                 <th>Verified</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -258,15 +276,25 @@
                         </thead>
                         <tbody>
                             @foreach ($vehicles as $item)
-                                <tr>
+                                @php
+                                    $expiredReasons = $item->expiredComplianceReasons();
+                                    $complianceExpired = ! empty($expiredReasons);
+                                    $reasonText = $complianceExpired
+                                        ? implode(', ', $expiredReasons) . ' expired'
+                                        : '';
+                                @endphp
+                                <tr @class(['table-danger' => $complianceExpired])>
                                     <td>
                                         <a href="{{ route('vehicle.show', $item->id) }}">{{ $item->vehicle_number }}</a>
                                     </td>
                                     <td>{{ $item->owner_name ?? '-' }}</td>
-                                    <td>{{ $item->vehicle_class ?? '-' }}</td>
+                                    <td>{{ $item->model_name ?: '-' }}</td>
+                                    <td>{{ $item->financer ?: '-' }}</td>
                                     <td>{{ $item->rc_status ?? '-' }}</td>
+                                    <td>{{ $item->insurance_company ?: '-' }}</td>
                                     <td>{{ safe_format_date($item->insurance_upto) }}</td>
                                     <td>{{ safe_format_date($item->pucc_upto) }}</td>
+                                    <td>{{ safe_format_date($item->rc_expiry_date) }}</td>
                                     <td>
                                         @if ($item->rc_verified_at)
                                             <span class="badge bg-success text-light">Verified</span>
@@ -274,10 +302,17 @@
                                             <span class="badge bg-secondary text-light">Manual</span>
                                         @endif
                                     </td>
-                                    <td>{!! check_status($item->is_visible) !!}</td>
+                                    <td title="{{ $reasonText }}">
+                                        {!! check_status($item->is_visible) !!}
+                                        @if ($complianceExpired)
+                                            <span class="compliance-expired-reason">{{ $reasonText }}</span>
+                                        @endif
+                                    </td>
                                     <td class="d-flex">
                                         <a class="btn" href="{{ route('vehicle.show', $item->id) }}" alt="view"><i
                                                 class="text-info" data-feather="eye"></i></a>
+                                        <a class="btn" href="{{ route('vehicle.download', $item->id) }}" alt="download"
+                                            title="Download PDF"><i class="text-success" data-feather="download"></i></a>
                                         @can('Vehicle Edit')
                                             <a class="btn" href="{{ route('vehicle.edit', $item->id) }}" alt="edit"><i
                                                     class="text-primary" data-feather="edit"></i></a>

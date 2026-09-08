@@ -129,6 +129,7 @@ Route::prefix('admin')->group(function (){
                 Route::post("/store",'store')->name('store');
                 Route::post("/storefrommodal",'storeFromModal')->name('storeFromModal');
                 Route::get("show/{id}",'show')->name('show');
+                Route::get("{id}/download",'downloadProfile')->name('download');
                 Route::get("edit/{id}",'edit')->name('edit');
                 Route::post("/update",'update')->name('update');
                 Route::delete("/delete/{routeId}",'destroy')->name('delete');

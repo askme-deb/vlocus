@@ -417,6 +417,12 @@
         a#openDeliveryNoteBtn {
     float: right;
     text-align: right;
+    color: #fff;
+}
+
+        a#openDeliveryNoteBtn:hover,
+        a#openDeliveryNoteBtn:focus {
+    color: #fff;
 }
 
 /*--------------------------------New css 7-7-2026---------------------------------------------*/
@@ -798,17 +804,18 @@ div#suggestions {
 
 
                     <div class="mb-2 mt-4">
-                        {{-- <a href="javascript:void(0);" data-bs-toggle="offcanvas" data-bs-target="#deliveryNote"
-                            class="btn-add text-decoration-none text-white">
-                            <i class="bi bi-plus-circle me-1 display-6"></i>
-                        </a> --}}
-                        
-                       
-                            <input type="text" id="delivery_date" name="delivery_date"
-                                value="{{ old('delivery_date') }}" class="form-control" placeholder="DD/MM/YYYY">
-                            <div class="invalid-feedback">Please enter a delivery date.</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="flex-grow-1">
+                                <input type="text" id="delivery_date" name="delivery_date"
+                                    value="{{ old('delivery_date') }}" class="form-control" placeholder="DD/MM/YYYY">
+                                <div class="invalid-feedback">Please enter a delivery date.</div>
+                            </div>
 
-
+                            <a href="javascript:void(0);" id="openDeliveryNoteBtn"
+                                class="btn-add text-decoration-none flex-shrink-0">
+                                <i class="bi bi-plus-circle display-6"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -823,7 +830,7 @@ div#suggestions {
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->name }} | {{ $vehicle->vehicle_number }}
+                                        {{ $vehicle->vehicle_number }} | {{ $vehicle->model_name ?? 'N/A' }}
                                     </option>
                                 @endforeach
                                 <option value="add_new">➕ Add New Vehicle</option>
@@ -845,13 +852,7 @@ div#suggestions {
                             </select>
                             <div class="invalid-feedback">Please select a driver.</div>
                         </div>
-                        
-                         
-                        <a href="javascript:void(0);" id="openDeliveryNoteBtn"
-                            class="btn-add text-decoration-none">
-                            <i class="bi bi-plus-circle me-1 display-6"></i>
-                        </a>
-                        
+
                     </div>
                     <div class="mb-3" id="searchWrapper" style="display:none;">
                         <input type="text" class="form-control" id="searchShop" placeholder="Search Shop...">
@@ -1567,9 +1568,9 @@ div#suggestions {
 
                 if (response.success) {
 
-                    let optionText = response.vehicle.name +
+                    let optionText = response.vehicle.vehicle_number +
                         ' | ' +
-                        response.vehicle.vehicle_number;
+                        (response.vehicle.brand || 'N/A');
 
                     let newOption = $('<option>')
                         .val(response.vehicle.id)
@@ -2623,6 +2624,7 @@ div#suggestions {
                 selectedShops = selectedShops.filter(s => s.id != id);
                 // updateShopSerialNumbers();
                 drawMultiStopRoute();
+                toggleSearchBar();
             });
 
 
@@ -2723,6 +2725,7 @@ div#suggestions {
             // Remove Location
             $(document).on("click", ".remove-location", function() {
                 $(this).closest(".d-flex").remove();
+                toggleSearchBar();
             });
 
             $("#locations").sortable({
@@ -2787,11 +2790,17 @@ div#suggestions {
 
         // Function to toggle search visibility
         function toggleSearchBar() {
-            if ($("#locations").children().length > 0) {
+            let hasLocations = $("#locations").children().length > 0;
+
+            if (hasLocations) {
                 $("#searchWrapper").show();
             } else {
                 $("#searchWrapper").hide();
             }
+
+            // Once the first delivery note exists, each added shop carries its
+            // own "+" button, so the one beside the date is redundant.
+            $("#openDeliveryNoteBtn").toggle(!hasLocations);
         }
     </script>
 @endsection

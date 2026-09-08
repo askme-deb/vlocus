@@ -21,6 +21,11 @@
         </div>
         <div class="ms-auto">
             <div class="d-flex align-items-center gap-2 justify-content-lg-end">
+                @can('Vehicle Show')
+                    <a class="btn btn-grd-success text-light px-4" href="{{ route('vehicle.download', $data->id) }}">
+                        <i class="bx bx-download"></i> Download
+                    </a>
+                @endcan
                 @can('Vehicle Edit')
                     <a class="btn btn-grd-primary text-light px-4" href="{{ route('vehicle.edit', $data->id) }}">
                         <i class="bx bx-edit"></i> Edit

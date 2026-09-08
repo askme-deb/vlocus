@@ -102,6 +102,13 @@
     }
 
     $('#modal_driving_license_number').on('input', function() {
+        let upper = (this.value || '').toUpperCase();
+        if (this.value !== upper) {
+            let pos = this.selectionStart;
+            this.value = upper;
+            this.setSelectionRange(pos, pos);
+        }
+
         if (modalDlVerified) return;
         $('#modal_dl_verification_data').val('');
         $('#modalDlVerifyStatus').removeClass('text-success text-danger').text('');
@@ -110,7 +117,7 @@
     $('#modalVerifyDlBtn').text('Fetch DL Details').on('click', function() {
         if (modalDlVerified) return;
 
-        let dlNumber = $('#modal_driving_license_number').val().trim();
+        let dlNumber = $('#modal_driving_license_number').val().trim().toUpperCase();
         let dob = $('#modal_date_of_birth').val();
         let $btn = $(this);
         let $status = $('#modalDlVerifyStatus');

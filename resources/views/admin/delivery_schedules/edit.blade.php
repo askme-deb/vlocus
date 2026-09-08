@@ -823,7 +823,7 @@ div#suggestions {
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         {{ old('vehicle_id', $delivery_Schedule->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->name }} | {{ $vehicle->vehicle_number }}
+                                        {{ $vehicle->vehicle_number }} | {{ optional($vehicle->brand)->name ?? 'N/A' }}
                                     </option>
                                 @endforeach
                                 <option value="add_new">➕ Add New Vehicle</option>
@@ -1639,9 +1639,9 @@ div#suggestions {
 
                 if (response.success) {
 
-                    let optionText = response.vehicle.name +
+                    let optionText = response.vehicle.vehicle_number +
                         ' | ' +
-                        response.vehicle.vehicle_number;
+                        (response.vehicle.brand || 'N/A');
 
                     let newOption = $('<option>')
                         .val(response.vehicle.id)

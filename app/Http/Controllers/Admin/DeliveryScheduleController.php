@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use App\Models\Driver;
+use App\Services\WhatsApp\WhatsAppService;
 class DeliveryScheduleController extends Controller implements HasMiddleware
 {
     public static function middleware(): array
@@ -261,7 +262,12 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
         //     ->get();
         // // $drivers = User::role('Driver')->latest()->get();
         // dd($drivers);
+// Drop drivers / vehicles whose validity has lapsed to inactive before listing.
+Driver::deactivateExpiredLicenceHolders();
+Vehicle::deactivateExpiredCompliance();
+
 $drivers = User::role('Driver')
+    ->where('status', 1)
     ->whereNotIn('id', function ($query) {
         $query->select('driver_id')
             ->from('delivery_schedules')
@@ -276,7 +282,10 @@ $drivers = User::role('Driver')
             ->pluck('vehicle_id')
             ->toArray();
 
-        $vehicles = Vehicle::whereNotIn('id', $engagedVehicleIds)
+        $vehicles = Vehicle::with('brand')
+            ->where('is_visible', 1)             // active
+            ->whereNotNull('rc_verified_at')    // RC verified
+            ->whereNotIn('id', $engagedVehicleIds)
             ->latest()
             ->get();
 
@@ -290,7 +299,7 @@ $drivers = User::role('Driver')
         return view('admin.delivery_schedules.create',compact('drivers','vehicles','shops','vehicle_types','brands','colors'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, WhatsAppService $whatsApp)
     {
         // return $request->all();
 
@@ -310,6 +319,9 @@ $drivers = User::role('Driver')
 
 
        $driver= Driver::where('user_id',$request->driver_id)->first();
+
+        $driverUser = User::find($request->driver_id);
+        $vehicle = Vehicle::find($request->vehicle_id);
 
 
         $deliverySchedule = DeliverySchedule::create([
@@ -342,16 +354,33 @@ $drivers = User::role('Driver')
                 'otp' => 1234
             ]);
 
+            $orderItemLines = [];
+
             if (!empty($request->product_titles[$index+1])) {
                 foreach ($request->product_titles[$index+1] as $pIndex => $title) {
+                    $unit = $request->product_units[$index+1][$pIndex] ?? null;
+                    $qty  = $request->product_qtys[$index+1][$pIndex] ?? null;
+
                     DeliveryScheduleShopProduct::create([
                         'delivery_schedule_shop_id' => $delivery_schedule->id,
                         'title' => $title,
-                        'unit_or_box' => $request->product_units[$index+1][$pIndex],
-                        'qty' => $request->product_qtys[$index+1][$pIndex],
+                        'unit_or_box' => $unit,
+                        'qty' => $qty,
                     ]);
+
+                    $orderItemLines[] = trim("• {$title} - {$qty} {$unit}");
                 }
             }
+
+            // Notify the shop owner (customer) on WhatsApp that the order is placed.
+            $this->notifyShopOwnerOrderPlaced(
+                $whatsApp,
+                $deliverySchedule,
+                $delivery_schedule,
+                $driverUser,
+                $vehicle,
+                $orderItemLines
+            );
         }
 
         if($deliverySchedule->id){
@@ -359,6 +388,44 @@ $drivers = User::role('Driver')
         }else{
             return back()->with(['error'=>'Delivery Schedule Not Created']);
         }
+    }
+
+    /**
+     * Send the "order placed" WhatsApp message to a single shop owner.
+     * Fails soft - any problem is logged inside the service and never
+     * interrupts task creation.
+     *
+     * @param  array<int, string>  $orderItemLines
+     */
+    private function notifyShopOwnerOrderPlaced(
+        WhatsAppService $whatsApp,
+        DeliverySchedule $deliverySchedule,
+        DeliveryScheduleShop $deliveryScheduleShop,
+        ?User $driverUser,
+        ?Vehicle $vehicle,
+        array $orderItemLines
+    ): void {
+        $shop = $deliveryScheduleShop->shop; // belongsTo(Shop::class)
+
+        if (! $shop || blank($shop->shop_contact_person_phone)) {
+            return;
+        }
+
+        $trackingUrl = route('order.tracking', [
+            'delivery_id' => $deliverySchedule->id,
+            'shop_id' => $deliveryScheduleShop->id,
+        ]);
+
+        $whatsApp->sendOrderPlacedNotification([
+            'customer_name' => $shop->shop_contact_person_name ?: $shop->shop_name,
+            'customer_phone' => $shop->shop_contact_person_phone,
+            'order_no' => $deliverySchedule->order_id,
+            'order_items' => implode("\n", $orderItemLines),
+            'vehicle_no' => optional($vehicle)->vehicle_number ?: '-',
+            'driver_name' => optional($driverUser)->name ?: '-',
+            'driver_contact' => optional($driverUser)->phone ?: '-',
+            'tracking_url' => $trackingUrl,
+        ]);
     }
 
     public function show(string $id)
@@ -422,7 +489,16 @@ $drivers = User::role('Driver')
             ->pluck('driver_id')
             ->toArray();
 
+        Driver::deactivateExpiredLicenceHolders();
+        Vehicle::deactivateExpiredCompliance();
+
         $drivers = User::role('Driver')
+            ->where(function ($q) use ($delivery_Schedule) {
+                // Active drivers, plus whoever is already assigned to this schedule
+                // so an existing (now-inactive) selection isn't silently dropped.
+                $q->where('status', 1)
+                    ->orWhere('id', $delivery_Schedule->driver_id);
+            })
             ->whereNotIn('id', $engagedDriverIds)
             ->latest()
             ->get();
@@ -433,7 +509,14 @@ $drivers = User::role('Driver')
             ->pluck('vehicle_id')
             ->toArray();
 
-        $vehicles = Vehicle::whereNotIn('id', $engagedVehicleIds)
+        $vehicles = Vehicle::with('brand')
+            ->where(function ($q) use ($delivery_Schedule) {
+                // Active + RC-verified, plus the vehicle already on this schedule
+                // so an existing selection isn't silently dropped.
+                $q->where(fn ($sub) => $sub->where('is_visible', 1)->whereNotNull('rc_verified_at'))
+                    ->orWhere('id', $delivery_Schedule->vehicle_id);
+            })
+            ->whereNotIn('id', $engagedVehicleIds)
             ->latest()
             ->get();
 

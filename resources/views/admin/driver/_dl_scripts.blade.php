@@ -35,9 +35,17 @@
             }
         }
 
-        // Invalidate a verified payload if the licence number is edited
-        // afterwards, so mismatched data never gets saved.
+        // Licence numbers are always upper case.
         $number.on('input', function () {
+            let upper = (this.value || '').toUpperCase();
+            if (this.value !== upper) {
+                let pos = this.selectionStart;
+                this.value = upper;
+                this.setSelectionRange(pos, pos);
+            }
+
+            // Invalidate a verified payload if the licence number is edited
+            // afterwards, so mismatched data never gets saved.
             if (dlLocked) return;
             $payload.val('');
             $status.removeClass('text-success text-danger').text('');
@@ -46,7 +54,7 @@
         $btn.on('click', function () {
             if (dlLocked) return;
 
-            let dlNumber = ($number.val() || '').trim();
+            let dlNumber = ($number.val() || '').trim().toUpperCase();
             let dob = $dob.val();
 
             $status.removeClass('text-success text-danger').text('');

@@ -169,7 +169,7 @@ class DriverBulkController extends Controller implements HasMiddleware
             $address      = trim($row['Address'] ?? '');
             $aadhaar      = trim($row['Aadhaar Number'] ?? '');
             $pan          = trim($row['PAN Card Number'] ?? '');
-            $license      = trim($row['Driving License Number'] ?? '');
+            $license      = strtoupper(trim($row['Driving License Number'] ?? ''));
             $vehicleTypeName = trim($row['Vehicle Type'] ?? '');
             $vehicleNumber   = trim($row['Vehicle Number'] ?? '');
             $experience   = trim($row['Driving Experience (years)'] ?? '');

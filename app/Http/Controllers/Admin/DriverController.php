@@ -53,7 +53,10 @@ class DriverController extends Controller implements HasMiddleware
             });
         }
 
-        $drivers = $query->latest()->get();
+        // Auto-deactivate drivers whose driving-licence validity has fully expired.
+        Driver::deactivateExpiredLicenceHolders();
+
+        $drivers = $query->with('driver')->latest()->get();
 
         return view('admin.driver.index',compact('drivers'));
     }
@@ -469,7 +472,7 @@ public function storeFromModal(Request $request)
 
         try {
             $result = $this->bankUIdentityService->verifyDrivingLicense(
-                $request->string('driving_license_number'),
+                strtoupper((string) $request->string('driving_license_number')),
                 $request->string('dob'),
                 auth()->user()->companyId(),
                 auth()->id(),

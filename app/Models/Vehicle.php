@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 class Vehicle extends Model implements HasMedia
@@ -126,6 +127,10 @@ class Vehicle extends Model implements HasMedia
     {
         return $this->belongsTo(VehicleLayout::class, 'layout_id', 'id');
     }
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id', 'id');
+    }
     public function vehicleType()
     {
         return $this->belongsTo(VehicleType::class, 'vehicle_type', 'id');
@@ -143,5 +148,67 @@ class Vehicle extends Model implements HasMedia
     public function journeys()
     {
         return $this->hasMany(Journey::class, 'vehicle_id');
+    }
+
+    /**
+     * Compliance validity dates checked before a vehicle may be dispatched,
+     * keyed by column name => human label.
+     */
+    public const COMPLIANCE_DATES = [
+        'insurance_upto' => 'Insurance',
+        'pucc_upto'      => 'PUCC',
+        'rc_expiry_date' => 'RC',
+    ];
+
+    /**
+     * Labels of the compliance dates that have already passed (Insurance / PUCC
+     * / RC). Dates are stored as free-form strings from the RC lookup, so parse
+     * defensively. Empty array = nothing expired.
+     *
+     * @return array<int, string>
+     */
+    public function expiredComplianceReasons(): array
+    {
+        $expired = [];
+
+        foreach (self::COMPLIANCE_DATES as $column => $label) {
+            $value = $this->{$column};
+
+            if (blank($value)) {
+                continue;
+            }
+
+            try {
+                if (Carbon::parse($value)->isPast()) {
+                    $expired[] = $label;
+                }
+            } catch (\Exception $e) {
+                // Unparseable date - ignore rather than block the vehicle.
+            }
+        }
+
+        return $expired;
+    }
+
+    /**
+     * Deactivate (is_visible = 0) every currently-visible vehicle whose
+     * insurance, PUCC or RC validity has expired. Returns the affected ids.
+     *
+     * @return array<int, int>
+     */
+    public static function deactivateExpiredCompliance(): array
+    {
+        $expiredIds = static::query()
+            ->where('is_visible', 1)
+            ->get()
+            ->filter(fn (self $vehicle) => ! empty($vehicle->expiredComplianceReasons()))
+            ->pluck('id')
+            ->values();
+
+        if ($expiredIds->isNotEmpty()) {
+            static::whereIn('id', $expiredIds)->update(['is_visible' => 0]);
+        }
+
+        return $expiredIds->all();
     }
 }

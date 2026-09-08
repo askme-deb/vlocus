@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 class Driver extends Model implements HasMedia
@@ -66,6 +68,17 @@ class Driver extends Model implements HasMedia
         'dl_tr_valid_to' => 'Valid Upto (Transport)',
     ];
 
+    /**
+     * Driving-licence numbers are always shown and stored in upper case.
+     */
+    protected function drivingLicenseNumber(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value === null ? null : strtoupper($value),
+            set: fn ($value) => $value === null ? null : strtoupper($value),
+        );
+    }
+
     public function bankAccount()
     {
         return $this->hasOne(DriverBankAccount::class);
@@ -103,5 +116,50 @@ class Driver extends Model implements HasMedia
         return $this->hasOne(DeliverySchedule::class, 'driver_id', 'user_id')
             ->where('is_completed', '!=', 1)
             ->latestOfMany('delivery_date');
+    }
+
+    /**
+     * True when every driving-licence validity date that is present
+     * (transport and/or non-transport) has already passed. Dates are stored
+     * as free-form strings from the BankU lookup, so parse defensively.
+     */
+    public function drivingLicenceExpired(): bool
+    {
+        $dates = collect([$this->dl_tr_valid_to, $this->dl_nt_valid_to])
+            ->filter()
+            ->map(function ($value) {
+                try {
+                    return Carbon::parse($value);
+                } catch (\Exception $e) {
+                    return null;
+                }
+            })
+            ->filter();
+
+        return $dates->isNotEmpty() && $dates->max()->isPast();
+    }
+
+    /**
+     * Deactivate (users.status = 0) every currently-active driver whose
+     * driving-licence validity has fully expired. Returns the affected user ids.
+     *
+     * @return array<int, int>
+     */
+    public static function deactivateExpiredLicenceHolders(): array
+    {
+        $expiredUserIds = static::query()
+            ->with('user:id,status')
+            ->whereHas('user', fn ($q) => $q->where('status', 1))
+            ->get()
+            ->filter->drivingLicenceExpired()
+            ->pluck('user_id')
+            ->filter()
+            ->values();
+
+        if ($expiredUserIds->isNotEmpty()) {
+            User::whereIn('id', $expiredUserIds)->update(['status' => 0]);
+        }
+
+        return $expiredUserIds->all();
     }
 }

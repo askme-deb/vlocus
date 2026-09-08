@@ -28,6 +28,8 @@ use App\Services\Wallet\Exceptions\ApiCallDisabledException;
 use App\Services\Wallet\Exceptions\InsufficientWalletBalanceException;
 
 use Carbon\Carbon;
+use PDF;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 class VehicleController extends Controller implements HasMiddleware
 {
     use HandlesBankUResponses;
@@ -39,7 +41,7 @@ class VehicleController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:Vehicle Show', only: ['index','show']),
+            new Middleware('permission:Vehicle Show', only: ['index','show','downloadProfile']),
             new Middleware('permission:Vehicle Create', only: ['create','store','verifyRc']),
             new Middleware('permission:Vehicle Edit', only: ['edit','update']),
             new Middleware('permission:Vehicle Delete', only: ['destroy']),
@@ -48,6 +50,9 @@ class VehicleController extends Controller implements HasMiddleware
 
     public function index()
     {
+        // Auto-deactivate vehicles whose insurance / PUCC / RC validity has expired.
+        Vehicle::deactivateExpiredCompliance();
+
         $query = Vehicle::latest();
 
         if ($companyId = auth()->user()->companyId()) {
@@ -263,6 +268,8 @@ public function storeFromModal(Request $request)
             'id'             => $vehicle->id,
             'name'           => $vehicle->name,
             'vehicle_number' => $vehicle->vehicle_number,
+            'brand'          => optional($vehicle->brand)->name
+                ?? ($vehicleData['manufacturer'] ?? null),
         ]
     ]);
 }
@@ -323,6 +330,42 @@ public function storeFromModal(Request $request)
         $vehicle = $query->findOrFail($id);
 
         return view('admin.vehicle.show', ['data' => $vehicle]);
+    }
+
+    /**
+     * Download a printable PDF summary of the vehicle's RC / compliance details.
+     */
+    public function downloadProfile($id)
+    {
+        $query = Vehicle::query();
+
+        if ($companyId = auth()->user()->companyId()) {
+            $query->where('company_id', $companyId);
+        }
+
+        $vehicle = $query->findOrFail($id);
+
+        // SVG, not PNG -- PNG rendering needs the imagick extension, which
+        // isn't installed here; SVG is pure XML and needs no image library.
+        $qrCodeSvg = QrCode::format('svg')->size(150)->margin(0)->generate(route('vehicle.show', $vehicle->id));
+
+        $photoPath = null;
+        $media = $vehicle->getFirstMedia('vehicles');
+        if ($media && file_exists($media->getPath())) {
+            $photoPath = $media->getPath();
+        }
+
+        $html = view('admin.vehicle.pdf', [
+            'data' => $vehicle,
+            'qrCodeDataUri' => 'data:image/svg+xml;base64,' . base64_encode($qrCodeSvg),
+            'photoPath' => $photoPath,
+        ])->render();
+
+        $pdf = PDF::loadHTML($html)->setPaper('a4', 'portrait')->set_option('isHtml5ParserEnabled', true);
+
+        $fileName = 'vehicle-' . ($vehicle->vehicle_number ?: $vehicle->id) . '.pdf';
+
+        return $pdf->download($fileName);
     }
 
     public function edit($id)

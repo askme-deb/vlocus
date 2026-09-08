@@ -47,4 +47,15 @@ return [
         'retry_delay_ms' => env('BANKU_RETRY_DELAY_MS', 200),
     ],
 
+    'whatsapp' => [
+        // Pinbot / WhatsApp Business cloud API. Disabled unless fully configured.
+        'enabled' => env('WHATSAPP_ENABLED', false),
+        'base_url' => env('WHATSAPP_API_URL', 'https://partnersv1.pinbot.ai/v3'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_key' => env('WHATSAPP_API_KEY'),
+        // Prepended to bare 10-digit local numbers before sending.
+        'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE', '91'),
+        'timeout' => env('WHATSAPP_TIMEOUT', 15),
+    ],
+
 ];
