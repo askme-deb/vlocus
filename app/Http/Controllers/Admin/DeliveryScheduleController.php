@@ -411,10 +411,10 @@ $drivers = User::role('Driver')
             return;
         }
 
-        $trackingUrl = route('order.tracking', [
+        $trackingUrl = rtrim((string) config('services.whatsapp.tracking_base_url'), '/') . route('order.tracking', [
             'delivery_id' => $deliverySchedule->id,
             'shop_id' => $deliveryScheduleShop->id,
-        ]);
+        ], false);
 
         $whatsApp->sendOrderPlacedNotification([
             'customer_name' => $shop->shop_contact_person_name ?: $shop->shop_name,

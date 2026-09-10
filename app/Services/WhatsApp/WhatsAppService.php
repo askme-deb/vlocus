@@ -49,6 +49,43 @@ class WhatsAppService
      */
     public function sendText(string $to, string $body, bool $previewUrl = true): bool
     {
+        return $this->sendMessage($to, [
+            'preview_url' => $previewUrl,
+            'type' => 'text',
+            'text' => ['body' => $body],
+        ]);
+    }
+
+    /**
+     * Send the approved ordernotification template with its six body values.
+     * Values must be supplied in the approved template's placeholder order.
+     */
+    public function sendTemplate(string $to, array $parameters): bool
+    {
+        if (count($parameters) !== 6) {
+            Log::warning('WhatsApp: order template requires six body parameters');
+
+            return false;
+        }
+
+        return $this->sendMessage($to, [
+            'type' => 'template',
+            'template' => [
+                'language' => ['code' => config('services.whatsapp.template_language', 'en')],
+                'name' => config('services.whatsapp.template_name', 'ordernotification'),
+                'components' => [[
+                    'type' => 'body',
+                    'parameters' => array_map(static fn ($value) => [
+                        'type' => 'text',
+                        'text' => (string) $value,
+                    ], array_values($parameters)),
+                ]],
+            ],
+        ]);
+    }
+
+    private function sendMessage(string $to, array $message): bool
+    {
         if (! $this->isConfigured()) {
             Log::warning('WhatsApp: service not configured, message skipped', ['to' => $to]);
 
@@ -71,12 +108,9 @@ class WhatsAppService
                 ])
                 ->post("{$this->baseUrl}/{$this->phoneNumberId}/messages", [
                     'messaging_product' => 'whatsapp',
-                    'preview_url' => $previewUrl,
-                    'recipient_type' => 'individual',
+                    'recipient_type' => 'INDIVIDUAL',
                     'to' => $recipient,
-                    'type' => 'text',
-                    'text' => ['body' => $body],
-                ]);
+                ] + $message);
 
             if ($response->failed()) {
                 Log::error('WhatsApp: send failed', [
@@ -102,7 +136,7 @@ class WhatsAppService
     /**
      * Notify a shop owner that their delivery order has been placed.
      *
-     * Expected keys: customer_name, customer_phone, order_no, order_items,
+     * Expected keys: customer_phone, order_no, order_items,
      * vehicle_no, driver_name, driver_contact, tracking_url.
      */
     public function sendOrderPlacedNotification(array $data): bool
@@ -117,25 +151,15 @@ class WhatsAppService
             return false;
         }
 
-        return $this->sendText($phone, $this->orderPlacedBody($data), true);
-    }
+        // Approved template: greeting name, order number, vehicle, driver, contact, tracking URL.
+        $parameters = array_map(static function (string $key) use ($data): string {
+            $value = trim(preg_replace('/\s+/u', ' ', (string) ($data[$key] ?? '')) ?? '');
 
-    /**
-     * Build the order-placed message body from the approved template.
-     */
-    private function orderPlacedBody(array $d): string
-    {
-        return "Dear *" . ($d['customer_name'] ?? 'Customer') . "*,\n\n"
-            . "Your order has been successfully placed.\n\n"
-            . "\u{1F4E6} *Order No:* " . ($d['order_no'] ?? '-') . "\n\n"
-            . "\u{1F6D2} *Order Items:*\n" . ($d['order_items'] ?: '-') . "\n\n"
-            . "\u{1F68C} *Vehicle No:* " . ($d['vehicle_no'] ?? '-') . "\n\n"
-            . "\u{1F468}\u{200D}\u{2708}\u{FE0F} *Driver Name:* " . ($d['driver_name'] ?? '-') . "\n\n"
-            . "\u{1F4DE} *Driver Contact:* " . ($d['driver_contact'] ?? '-') . "\n\n"
-            . "\u{1F4CD} *Track Your Order:*\n" . ($d['tracking_url'] ?? '-') . "\n\n"
-            . "Thank you for choosing our service. We appreciate your business.";
-    }
+            return $value !== '' ? $value : '-';
+        }, ['customer_name', 'order_no', 'vehicle_no', 'driver_name', 'driver_contact', 'tracking_url']);
 
+        return $this->sendTemplate($phone, $parameters);
+    }
     /**
      * Reduce a user-entered phone number to the digits-only E.164-style form
      * the API expects (country code + subscriber number, no '+'). Returns null

@@ -1,0 +1,1 @@
+{"version":1,"defects":[],"times":{"Tests\\Unit\\WhatsAppServiceTest::test_template_request_matches_pinbot_payload":0.623,"Tests\\Unit\\WhatsAppServiceTest::test_incomplete_template_is_not_sent":0.011}}

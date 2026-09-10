@@ -53,6 +53,11 @@ return [
         'base_url' => env('WHATSAPP_API_URL', 'https://partnersv1.pinbot.ai/v3'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'api_key' => env('WHATSAPP_API_KEY'),
+        // Pinbot identifies the template by name in the messages request.
+        'template_id' => env('WHATSAPP_TEMPLATE_ID', '3740984'),
+        'template_name' => env('WHATSAPP_TEMPLATE_NAME', 'ordernotification'),
+        'template_language' => env('WHATSAPP_TEMPLATE_LANGUAGE', 'en'),
+        'tracking_base_url' => env('WHATSAPP_TRACKING_BASE_URL', env('APP_URL')),
         // Prepended to bare 10-digit local numbers before sending.
         'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE', '91'),
         'timeout' => env('WHATSAPP_TIMEOUT', 15),
