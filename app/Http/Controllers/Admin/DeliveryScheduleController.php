@@ -332,7 +332,7 @@ $drivers = User::role('Driver')
             'vehicle_id' => $request->vehicle_id,
             'delivery_note'=>$request->delivery_note,
             'payment_type'=>$request->payment_type,
-            'amount'=>$request->amount,
+            'amount'=>$request->amount ?: 0,
         ]);
 
         // Attach sorted shops (Modify based on your DB structure)
@@ -411,10 +411,7 @@ $drivers = User::role('Driver')
             return;
         }
 
-        $trackingUrl = rtrim((string) config('services.whatsapp.tracking_base_url'), '/') . route('order.tracking', [
-            'delivery_id' => $deliverySchedule->id,
-            'shop_id' => $deliveryScheduleShop->id,
-        ], false);
+        $trackingUrl = $deliveryScheduleShop->publicTrackingUrl();
 
         $whatsApp->sendOrderPlacedNotification([
             'customer_name' => $shop->shop_contact_person_name ?: $shop->shop_name,
@@ -581,7 +578,7 @@ $drivers = User::role('Driver')
             'vehicle_id' => $request->vehicle_id,
             'delivery_note'=>$request->delivery_note,
             'payment_type'=>$request->payment_type,
-            'amount'=>$request->amount,
+            'amount'=>$request->amount ?: 0,
         ]);
 
         // Remove old shops and insert new ones
