@@ -87,7 +87,7 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
             'vehicle',
             'deliveryScheduleShops' => function ($query) use ($shop_id) {
                 $query->where('shop_id', $shop_id)
-                    ->with(['shop', 'products', 'branch']);
+                    ->with(['shop', 'products', 'branch.branch']);
             }
         ])->findOrFail($delivery_id);
 
@@ -122,12 +122,57 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
             'otp'             => $shop->otp ?? 'N/A',
         ];
 
+        $originLat = $shop->branch?->branch?->latitude;
+        $originLng = $shop->branch?->branch?->longitude;
+        $destLat = $shop->shop?->shop_latitude;
+        $destLng = $shop->shop?->shop_longitude;
+
+        $routePolyline = null;
+        if (filled($originLat) && filled($originLng) && filled($destLat) && filled($destLng)) {
+            $routePolyline = $this->fetchRoutePolyline($originLat, $originLng, $destLat, $destLng);
+        }
+
         return view('admin.delivery_schedules.invoice', compact(
             'invoiceData',
             'shop',
             'driver',
-            'driver_details'
+            'driver_details',
+            'originLat',
+            'originLng',
+            'routePolyline'
         ));
+    }
+
+    /**
+     * The driving route (as an encoded polyline) from the sender's branch to
+     * the shop, for the pickup-to-delivery map on the printed invoice. Fails
+     * soft - any problem is logged and the invoice just falls back to a
+     * single destination marker instead of a route.
+     */
+    private function fetchRoutePolyline(string $originLat, string $originLng, string $destLat, string $destLng): ?string
+    {
+        try {
+            $response = Http::timeout(8)->withHeaders([
+                'Content-Type' => 'application/json',
+                'X-Goog-Api-Key' => 'AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl',
+                'X-Goog-FieldMask' => '*',
+            ])->post('https://routes.mapthrust.io/directions/v2:computeRoutes', [
+                'origin' => ['location' => ['latLng' => ['latitude' => (float) $originLat, 'longitude' => (float) $originLng]]],
+                'destination' => ['location' => ['latLng' => ['latitude' => (float) $destLat, 'longitude' => (float) $destLng]]],
+                'travelMode' => 'DRIVE',
+                'routingPreference' => 'TRAFFIC_AWARE',
+                'computeAlternativeRoutes' => false,
+                'polylineEncoding' => 'ENCODED_POLYLINE',
+                'languageCode' => 'en-US',
+                'units' => 'METRIC',
+            ]);
+
+            return $response->json('routes.0.polyline.encodedPolyline');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Invoice route polyline fetch failed', ['error' => $e->getMessage()]);
+
+            return null;
+        }
     }
 
 
@@ -164,7 +209,8 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
                 $query->where('shop_name', 'like', "%{$search}%")
                     ->orWhere('shop_contact_person_name', 'like', "%{$search}%")
                     ->orWhere('shop_contact_person_phone', 'like', "%{$search}%")
-                    ->orWhere('shop_number', 'like', "%{$search}%");
+                    ->orWhere('shop_number', 'like', "%{$search}%")
+                    ->orWhere('shop_registration_number', 'like', "%{$search}%");
             })
             ->orderBy('shop_name')
             ->limit(10)
@@ -176,6 +222,7 @@ class DeliveryScheduleController extends Controller implements HasMiddleware
                 'shop_longitude',
                 'shop_contact_person_name',
                 'shop_contact_person_phone',
+                'shop_registration_number',
             ]);
 
         return response()->json($shops);
@@ -296,7 +343,15 @@ $drivers = User::role('Driver')
         $brands = Brand::where('is_visible',1)->get();
 
         $colors= Color::where('is_visible',1)->get();
-        return view('admin.delivery_schedules.create',compact('drivers','vehicles','shops','vehicle_types','brands','colors'));
+
+        // Employee/Branch accounts book from their own branch automatically
+        // (see the "Booking From" field in the view); everyone else needs to
+        // pick a sender branch explicitly so the pickup location is on record.
+        $branches = auth()->user()->hasRole('Company')
+            ? User::role('Branch')->whereHas('branch', fn ($q) => $q->where('company_id', auth()->id()))->latest()->get()
+            : User::role('Branch')->latest()->get();
+
+        return view('admin.delivery_schedules.create',compact('drivers','vehicles','shops','vehicle_types','brands','colors','branches'));
     }
 
     public function store(Request $request, WhatsAppService $whatsApp)
@@ -542,8 +597,15 @@ $drivers = User::role('Driver')
 
         $colors= Color::where('is_visible',1)->get();
 
+        // Same sender-branch picker as the create page (see create()) plus
+        // the branch already booked against this schedule, if any, so it's
+        // pre-selected instead of silently resetting on save.
+        $branches = auth()->user()->hasRole('Company')
+            ? User::role('Branch')->whereHas('branch', fn ($q) => $q->where('company_id', auth()->id()))->latest()->get()
+            : User::role('Branch')->latest()->get();
+        $currentBranchId = $selectedShops->first()?->sender_branch_id;
 
-        return view('admin.delivery_schedules.edit',compact('drivers','vehicle_types','brands','colors','vehicles','shops','delivery_Schedule','selectedShops'));
+        return view('admin.delivery_schedules.edit',compact('drivers','vehicle_types','brands','colors','vehicles','shops','delivery_Schedule','selectedShops','branches','currentBranchId'));
     }
 
     public function update(Request $request, string $id)

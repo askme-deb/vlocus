@@ -31,7 +31,7 @@
     <!-- Company Info -->
     <div style="border: 2px solid black; display: flex; margin:10px; text-align: center;">
         <div style="border-right: 2px solid black; padding: 10px; display: flex; align-items: center; justify-content: center;">
-            <img src="{{ asset('assets/invoice-assets/image.png') }}" alt="Logo" style="height: 60px;">
+            <img src="{{ asset('assets/dashboard-assets/assets/images/logo.png') }}" alt="Logo" style="height: 60px;">
         </div>
         <div style="flex: 1;">
             <div style="font-weight: bold; font-size: 15px; background-color: black; color: white; padding: 5px 0;">
@@ -127,14 +127,55 @@
     </table>
 
     <!-- Location and Receiver -->
+    @php
+        $consigneeShop = $invoiceData['consignee'] ?? null;
+        $mapLat = $consigneeShop->shop_latitude ?? null;
+        $mapLng = $consigneeShop->shop_longitude ?? null;
+        $hasMapCoords = $mapLat !== null && $mapLng !== null && $mapLat !== '' && $mapLng !== '';
+        $hasOriginCoords = filled($originLat ?? null) && filled($originLng ?? null);
+
+        if ($hasMapCoords && $hasOriginCoords && !empty($routePolyline)) {
+            // Pickup-to-delivery route: the static map auto-frames itself to
+            // fit both markers and the path, so no center/zoom is passed.
+            $staticMapUrl = 'https://maps.mapthrust.io/maps/api/staticmap?size=260x180&scale=2&maptype=roadmap'
+                . '&path=weight:4%7Ccolor:0x1a73e8ff%7Cenc:' . urlencode($routePolyline)
+                . '&markers=color:green%7Clabel:S%7C' . $originLat . ',' . $originLng
+                . '&markers=color:red%7Clabel:D%7C' . $mapLat . ',' . $mapLng
+                . '&key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl';
+        } elseif ($hasMapCoords) {
+            // No sender-branch location (or the route couldn't be computed) -
+            // just pin the delivery destination.
+            $staticMapUrl = 'https://maps.mapthrust.io/maps/api/staticmap?center=' . $mapLat . ',' . $mapLng
+                . '&zoom=15&size=260x180&scale=2&maptype=roadmap'
+                . '&markers=color:red%7C' . $mapLat . ',' . $mapLng
+                . '&key=AlzaSyC7RSr791vm_29LJiUOPJO-sLnBZg6qiGl';
+        } else {
+            $staticMapUrl = null;
+        }
+
+        $receiverName = $shop->effectiveReceiverName();
+        $receiverPhone = $shop->effectiveReceiverPhone();
+    @endphp
     <div style="display: flex; border: 2px solid black; margin: 0 10px;">
         <div style="flex: 1; border-right: 2px solid black; text-align: center;">
             <div style="font-weight: bold; background: #000; color: #fff; padding: 5px 0; font-size: 12px;">LOCATION MAP DETAILS</div>
-            <img src="{{ asset('assets/invoice-assets/map.png') }}" alt="Map">
+            @if($staticMapUrl)
+                <img src="{{ $staticMapUrl }}" alt="Delivery route map" style="width: 260px; height: 180px; object-fit: cover;">
+                @if($hasMapCoords && $hasOriginCoords && !empty($routePolyline))
+                    <div style="font-size: 9px; color: #666; padding: 2px 0;">🟢 Pickup &nbsp;→&nbsp; 🔴 Delivery</div>
+                @endif
+            @else
+                <div style="width: 260px; height: 180px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #666;">
+                    Location not available
+                </div>
+            @endif
         </div>
         <div style="flex: 1; text-align: center;">
             <div style="font-weight: bold; background: #000; color: #fff; padding: 5px 0; font-size: 12px;">RECEIVER DETAILS</div>
-            <img src="{{ asset('assets/invoice-assets/receiver.png') }}" alt="Receiver" style="margin: 10px 0;">
+            <div style="padding: 18px 10px; font-size: 13px; line-height: 1.7;">
+                <div style="font-weight: bold; font-size: 14px;">{{ $receiverName ?: 'N/A' }}</div>
+                <div>{{ $receiverPhone ?: 'N/A' }}</div>
+            </div>
             <div style="border-top: 2px solid black; display: flex; align-items: center; font-weight: bold; font-size: 14px; width: auto;">
                 <div style="background-color: black; color: white; padding: 2px 6px;">OTP:</div>
                 <div style="padding: 2px 8px; color: #000;">{{ $invoiceData['otp'] }}</div>
@@ -143,15 +184,26 @@
     </div>
 
     <!-- Footer Signatures -->
+    @php
+        // No pickup-time signature capture exists in the app, so the sender
+        // side is always left blank for a physical/pen signature on the
+        // printed note. The receiver's signature, when the driver's app has
+        // already captured one at drop-off, is pulled in for real instead.
+        $receiverSignatureUrl = $shop->hasMedia('signature') ? $shop->getFirstMediaUrl('signature') : null;
+    @endphp
     <div style="display: flex; padding: 10px; font-size: 12px; text-align: center; border-bottom: 2px solid black;">
         <div style="flex: 1;">
             For {{ $invoiceData['consignor']->name ?? 'N/A' }}<br><br>
-            <img src="{{ asset('assets/invoice-assets/sign1.png') }}" alt="">
+            <div style="height: 45px;"></div>
             <div style="margin-top: 5px;">_________________<br>SENDER SIGNATURE</div>
         </div>
         <div style="flex: 1;">
             For {{ $invoiceData['consignee']->shop_name ?? 'N/A' }}<br><br>
-            <img src="{{ asset('assets/invoice-assets/sign2.png') }}" alt="">
+            @if($receiverSignatureUrl)
+                <img src="{{ $receiverSignatureUrl }}" alt="Receiver signature" style="height: 45px; max-width: 160px; object-fit: contain;">
+            @else
+                <div style="height: 45px;"></div>
+            @endif
             <div style="margin-top: 5px;">_________________<br>RECEIVER SIGNATURE</div>
         </div>
     </div>

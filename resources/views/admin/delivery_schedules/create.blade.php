@@ -28,8 +28,8 @@
         }
 
         #shopMap {
-            position: static !important;
-            overflow: visible !important;
+            width: 100%;
+            height: 100%;
         }
 
         /* Base Reset */
@@ -117,6 +117,19 @@
             cursor: pointer;
         }
 
+        .shop-name-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .shop-reg-text {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #8a94a6;
+            line-height: 1.3;
+        }
+
         .location-content {
             padding: 10px;
         }
@@ -148,6 +161,77 @@
             border-bottom: 1px solid #eee;
             border-radius: 5px;
             margin-bottom: 4px;
+        }
+
+        /* Order meta summary (invoice / payment / amount) */
+        .order-meta {
+            display: flex;
+            flex-direction: column;
+            background: #fbfbfd;
+            border: 1px solid #e9ecef;
+            border-radius: 7px;
+            padding: 0 10px;
+            margin-bottom: 8px;
+        }
+
+        .order-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 5px 0;
+            border-bottom: 1px dashed #e3e6ea;
+        }
+
+        .order-meta-row:last-child {
+            border-bottom: none;
+        }
+
+        .order-meta-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            color: #8a94a6;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        .order-meta-label i {
+            font-size: 0.78rem;
+            color: #349eff;
+        }
+
+        .order-meta-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .order-meta-amount {
+            color: #157347;
+        }
+
+        .payment-badge {
+            display: inline-block;
+            padding: 1px 10px;
+            border-radius: 20px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+
+        .payment-badge-prepaid {
+            background: #e6f7ec;
+            color: #157347;
+            border: 1px solid #b7e4c7;
+        }
+
+        .payment-badge-cod {
+            background: #fff3e0;
+            color: #a15c00;
+            border: 1px solid #ffddab;
         }
 
         /* Buttons */
@@ -660,6 +744,7 @@ div#suggestions {
                 <input type="hidden" name="shop_addresse" id="shop_addresse">
                 <input type="hidden" name="shop_latitude" id="shop_latitude">
                 <input type="hidden" name="shop_longitude" id="shop_longitude">
+                <input type="hidden" name="shop_registration_number" id="shop_registration_number">
 
                 <div class="custom-input-wrapper mb-3">
                     <label class="custom-floating-label">
@@ -679,7 +764,12 @@ div#suggestions {
                     @endif
 
                     @if (! auth()->user()->hasRole('Employee') && ! auth()->user()->hasRole('Branch'))
-                        <input type="hidden" name="branch_id" id="branch_id" value="">
+                        <select name="branch_id" id="branch_id" class="form-control form-select custom-input">
+                            <option value="">Select sender branch</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
                     @endif
                 </div>
 
@@ -693,7 +783,7 @@ div#suggestions {
                     <input type="text" class="form-control custom-input" id="search_shop_name" name="consignee_details"
                         placeholder="Type here..." autocomplete="off">
                     <div id="suggestions" class="list-group position-absolute z-index-3"
-                        style="z-index: 99999; height: 100px; overflow-y: auto; width: 95%;background: white;">
+                        style="z-index: 99999; height: 430px; overflow-y: auto; width: 95%;background: white;">
                     </div>
                 </div>
 
@@ -713,7 +803,7 @@ div#suggestions {
                             <input type="text" placeholder="Title" class="product-title form-control custom-input">
                             <select class="product-unit form-select custom-input">
                                 <option value="unit">Unit</option>
-                                <option value="box">Box</option>
+                                <option value="box" selected>Box</option>
                             </select>
                             <input type="number" min="1" value="1"
                                 class="product-qty form-control custom-input">
@@ -744,8 +834,8 @@ div#suggestions {
                 <div class="custom-input-wrapper mb-3">
                     <label class="custom-floating-label">PAYMENT DETAILS</label>
                     <select class="form-control form-select custom-input payment-type" name="payment_type">
-                        <option value="" selected disabled>Select Type</option>
-                        <option value="Pre-Paid">Pre-Paid</option>
+                        <option value=""  disabled>Select Type</option>
+                        <option value="Pre-Paid" selected>Prepaid</option>
                         <option value="COD">COD</option>
                     </select>
                 </div>
@@ -1299,7 +1389,7 @@ div#suggestions {
                 <input type="text" placeholder="Title" class="product-title form-control custom-input">
                 <select class="product-unit form-select custom-input">
                     <option value="unit">Unit</option>
-                    <option value="box">Box</option>
+                    <option value="box" selected>Box</option>
                 </select>
                 <input type="number" min="1" value="1" class="product-qty form-control custom-input">
                 <button type="button" class="remove-row btn btn-sm btn-danger" onclick="removeRow(this)">
@@ -2027,10 +2117,6 @@ div#suggestions {
                 decodedPath.forEach(p => bounds.extend(p));
                 map.fitBounds(bounds);
 
-                google.maps.event.addListenerOnce(map, "bounds_changed", function() {
-                    map.setZoom(12); // closer view
-                });
-
                 // Clear old markers
                 shopMarkers.forEach(marker => marker.setMap(null));
                 shopMarkers = [];
@@ -2167,10 +2253,6 @@ div#suggestions {
             const bounds = new google.maps.LatLngBounds();
             allPoints.forEach(p => bounds.extend(new google.maps.LatLng(p.lat, p.lng)));
             map.fitBounds(bounds);
-
-            google.maps.event.addListenerOnce(map, "bounds_changed", function() {
-                map.setZoom(12); // closer view
-            });
         }
 
 
@@ -2216,6 +2298,7 @@ div#suggestions {
                             const $option = $(`
                             <a href="#" class="list-group-item list-group-item-action d-flex flex-column">
                                 <div class="fw-bold">${item.shop_name}</div>
+                                ${item.shop_registration_number ? `<span class="shop-reg-text">Reg. No: ${item.shop_registration_number}</span>` : ''}
                                 <small>${item.shop_address}</small>
                             </a>
                         `);
@@ -2225,7 +2308,8 @@ div#suggestions {
                                 name: item.shop_name,
                                 address: item.shop_address,
                                 lat: item.shop_latitude,
-                                lng: item.shop_longitude
+                                lng: item.shop_longitude,
+                                regno: item.shop_registration_number
                             });
 
                             $suggestions.append($option);
@@ -2246,6 +2330,7 @@ div#suggestions {
                 $('#shop_addresse').val(data.address);
                 $('#shop_latitude').val(data.lat);
                 $('#shop_longitude').val(data.lng);
+                $('#shop_registration_number').val(data.regno);
 
                 $('#productTotalSection').show();
 
@@ -2254,7 +2339,8 @@ div#suggestions {
                     name: data.name,
                     lat: parseFloat(data.lat),
                     lng: parseFloat(data.lng),
-                    address: data.address
+                    address: data.address,
+                    regno: data.regno
                 });
 
                 // showLocationsOnly();
@@ -2441,12 +2527,16 @@ div#suggestions {
                 let consignee = $('#search_shop_name').val().trim();
                 let paymentType = $('select[name="payment_type"]').val();
                 let amount = $('input[name="amount"]').val().trim();
+                if (paymentType === 'Pre-Paid' && amount === '') {
+                    amount = '0.00';
+                }
                 let shop_id = $("#shop_id").val();
                 let shop_name = $("#shop_name").val();
                 let shop_addresse = $("#shop_addresse").val();
                 let shop_latitude = $("#shop_latitude").val();
                 let shop_longitude = $("#shop_longitude").val();
                 let branch_id = $("#branch_id").val();
+                let shopRegNo = $("#shop_registration_number").val();
 
                 // Validate fields
                 if (orderNo === "") {
@@ -2461,7 +2551,7 @@ div#suggestions {
                     $('select[name="payment_type"]').addClass("is-invalid");
                     isValid = false;
                 }
-                if (amount === "") {
+                if (paymentType !== 'Pre-Paid' && amount === "") {
                     $('input[name="amount"]').addClass("is-invalid");
                     isValid = false;
                 }
@@ -2534,9 +2624,12 @@ div#suggestions {
                 <div class="location-box flex-grow-1 w-100">
                     <div class="location-header p-2 d-flex justify-content-between align-items-center"
                         data-bs-toggle="collapse" data-bs-target="#location${locationCount}" style="cursor: pointer;">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
-                            ${consignee || 'Location ' + locationCount}
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-geo-alt-fill me-2 text-primary mt-1"></i>
+                            <div class="d-flex flex-column">
+                                <span class="shop-name-text">${consignee || 'Location ' + locationCount}</span>
+                                ${shopRegNo ? `<span class="shop-reg-text">Reg. No: ${shopRegNo}</span>` : ''}
+                            </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-chevron-down toggle-icon"></i>
@@ -2550,6 +2643,7 @@ div#suggestions {
                     <input type="hidden" name="shop_addresses[]" value="${shop_addresse}">
                     <input type="hidden" name="shop_latitudes[]" value="${shop_latitude}">
                     <input type="hidden" name="shop_longitudes[]" value="${shop_longitude}">
+                    <input type="hidden" name="shop_registration_numbers[]" value="${shopRegNo || ''}">
                     <input type="hidden" name="invoice_nos[]" value="${orderNo}">
                     <input type="hidden" name="payment_types[]" value="${paymentType}">
                     <input type="hidden" name="amounts[]" value="${amount}">
@@ -2557,18 +2651,18 @@ div#suggestions {
                     ${productInputs}
                     <div class="collapse" id="location${locationCount}">
                         <div class="location-content">
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-4">
-                                    <input type="text" class="form-control" value="${orderNo}" placeholder="Enter Invoice">
+                            <div class="order-meta">
+                                <div class="order-meta-row">
+                                    <span class="order-meta-label"><i class="bi bi-receipt"></i>Invoice No.</span>
+                                    <span class="order-meta-value">${orderNo || '—'}</span>
                                 </div>
-                                <div class="col-md-4">
-                                    <select class="form-select">
-                                        <option ${paymentType === 'Pre-Paid' ? 'selected' : ''}>Pre-Paid</option>
-                                        <option ${paymentType === 'COD' ? 'selected' : ''}>COD</option>
-                                    </select>
+                                <div class="order-meta-row">
+                                    <span class="order-meta-label"><i class="bi bi-credit-card-2-front"></i>Payment</span>
+                                    <span class="order-meta-value"><span class="payment-badge ${paymentType === 'COD' ? 'payment-badge-cod' : 'payment-badge-prepaid'}">${paymentType === 'COD' ? 'COD' : 'Prepaid'}</span></span>
                                 </div>
-                                <div class="col-md-4">
-                                    <input type="number" class="form-control" value="${amount}" placeholder="0.0">
+                                <div class="order-meta-row">
+                                    <span class="order-meta-label"><i class="bi bi-cash-stack"></i>Amount</span>
+                                    <span class="order-meta-value order-meta-amount">₹${Number(amount || 0).toFixed(2)}</span>
                                 </div>
                             </div>
                             ${productsHTML}
@@ -2595,7 +2689,7 @@ div#suggestions {
                     <input type="text" placeholder="Title" class="product-title form-control custom-input">
                     <select class="product-unit form-select custom-input">
                         <option value="unit">Unit</option>
-                        <option value="box">Box</option>
+                        <option value="box" selected>Box</option>
                     </select>
                     <input type="number" min="1" value="1" class="product-qty form-control custom-input">
                     <button type="button" class="remove-row btn btn-sm btn-danger" onclick="removeRow(this)">
@@ -2632,12 +2726,13 @@ div#suggestions {
                 let locationBox = $(this).closest(".location-box");
 
                 // Get data from inside the location
-                let orderNo = locationBox.find('input[placeholder="Enter Invoice"]').val();
-                let paymentType = locationBox.find("select.form-select").val();
-                let amount = locationBox.find('input[type="number"]').val();
+                let orderNo = locationBox.find('input[name="invoice_nos[]"]').val();
+                let paymentType = locationBox.find('input[name="payment_types[]"]').val();
+                let amount = locationBox.find('input[name="amounts[]"]').val();
 
-                let consignor = locationBox.find(".location-header div:first").text().trim();
+                let consignor = locationBox.find(".shop-name-text").first().text().trim();
                 let shop_id = locationBox.find('input[name="shop_ids[]"]').val();
+                let shopRegNo = locationBox.find('input[name="shop_registration_numbers[]"]').val();
 
                 // Populate back to form
                 $('input[name="invoice_no"]').val(orderNo);
@@ -2645,6 +2740,7 @@ div#suggestions {
                 $('select[name="payment_type"]').val(paymentType);
                 $('input[name="amount"]').val(amount);
                 $("#shop_id").val(shop_id);
+                $("#shop_registration_number").val(shopRegNo);
 
                 // Products
                 let productContainer = $("#product-container").empty();
@@ -2772,7 +2868,7 @@ div#suggestions {
                 // console.log(searchText);
 
                 $("#locations > .d-flex").each(function() {
-                    let shopName = $(this).find(".location-header div.d-flex:first").text()
+                    let shopName = $(this).find(".shop-name-text").first().text()
                         .toLowerCase();
 
                     if (shopName.indexOf(searchText) > -1) {

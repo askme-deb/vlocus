@@ -107,6 +107,32 @@
         padding: 8px 20px;
     }
 
+    .task-report .btn-filter.btn-primary {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+        color: #fff;
+    }
+
+    .task-report .btn-filter.btn-primary:hover,
+    .task-report .btn-filter.btn-primary:focus {
+        background-color: #4338ca;
+        border-color: #4338ca;
+        color: #fff;
+    }
+
+    .task-report .btn-filter.btn-outline-secondary {
+        background-color: #fff;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+
+    .task-report .btn-filter.btn-outline-secondary:hover,
+    .task-report .btn-filter.btn-outline-secondary:focus {
+        background-color: #f1f5f9;
+        border-color: #94a3b8;
+        color: #334155;
+    }
+
     .task-report table.premium-table {
         border-collapse: separate;
         border-spacing: 0;
@@ -292,7 +318,7 @@
                     <input type="date" name="end_date" value="{{ $endDate }}" class="form-control">
                 </div>
                 <div class="col-md-3">
-                    <label><i class='bx bx-search'></i> Search (Shop / Driver)</label>
+                    <label><i class='bx bx-search'></i> Search (Shop / Reg. No / Contact / Driver / Phone)</label>
                     <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Search...">
                 </div>
                 <div class="col-md-2 text-end">
@@ -308,6 +334,7 @@
                             <th>SL No.</th>
                             <th>LR No.</th>
                             <th>Shop</th>
+                            <th>Shop Reg. No.</th>
                             <th>Driver</th>
                             <th>Vehicle</th>
                             <th>Delivery Date</th>
@@ -326,6 +353,7 @@
                                     <span class="shop-avatar">{{ strtoupper(substr($report->shop->shop_name ?? '?', 0, 1)) }}</span>
                                     {{ $report->shop->shop_name ?? 'N/A' }}
                                 </td>
+                                <td>{{ $report->shop->shop_registration_number ?? '-' }}</td>
                                 <td>{{ $report->deliverySchedule->driver->name ?? 'N/A' }}</td>
                                 <td>{{ $report->deliverySchedule->vehicle->vehicle_number ?? 'N/A' }}</td>
                                 <td>{{ $report->deliverySchedule->delivery_date ?? 'N/A' }}</td>
@@ -350,7 +378,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10">
+                                <td colspan="11">
                                     <div class="empty-state">
                                         <i class='bx bx-search-alt'></i>
                                         No tasks found for the selected filters.
