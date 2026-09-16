@@ -687,7 +687,7 @@ div#suggestions {
                     <input type="text" class="form-control custom-input" id="search_shop_name" name="consignee_details"
                         placeholder="Type here...">
                     <div id="suggestions" class="list-group position-absolute z-index-3"
-                        style="z-index: 99999; height: 100px; overflow-y: auto; width: 95%;background: white;">
+                        style="z-index: 99999; height: 430px; overflow-y: auto; width: 95%;background: white;">
                     </div>
                 </div>
 
