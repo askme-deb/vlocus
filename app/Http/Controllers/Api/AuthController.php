@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -239,27 +240,22 @@ protected function verifyOTP(Request $request)
 
         $otp = 1234;
         $user = User::where('phone', $phoneNumber)->first();
-        $user->tokens()->delete(); 
-        $token = $user->createToken('AuthToken')->plainTextToken; 
+        $user->tokens()->delete();
+        $token = $user->createToken('AuthToken')->plainTextToken;
         $user->otp=$otp;
         $user->otp_timestamp= Carbon::now();
         $user->save();
-        
-        
-        $phone=9547480822;
-        
-      $message = "Your one time password is {$otp}. Please use this One Time Password (OTP) within the next ten minutes to proceed. Thank you. AGILTAS SOLUTION";
 
-        // Send SMS
-      $response_sms= $this->sendSms($phone, $message);
-    
+        // OTP is static (1234) for now, so no SMS is sent. When real OTPs
+        // come back, send to $phoneNumber (not a hardcoded test number)
+        // via $this->sendSms($phoneNumber, $message).
+
         return response()->json([
             'status' => true,
             'message' => 'New OTP generated successfully.',
             'sent' => 'An OTP has been sent to your phone number.',
             'note' => 'OTP is valid for 1 minute.',
-            'token' => $token, 
-            'response_sms'=>$response_sms,
+            'token' => $token,
         ]);
     }
     
@@ -342,23 +338,36 @@ protected function verifyOTP(Request $request)
         }        
     }
 
-    public function delete_user_account(Request $request){
+    /**
+     * Permanently deletes the authenticated driver's account and every
+     * dependent record cascaded from it (driver profile, bank account,
+     * locations, media, etc. via FK onDelete('cascade')). Restricted to
+     * Driver-role accounts only - this is the account-deletion mechanism
+     * required by the app store policies for the driver app.
+     *
+     * Historical delivery_schedules rows are kept for audit/accounting
+     * purposes; their driver_id is set to null (onDelete('set null'))
+     * rather than the delivery record itself being removed.
+     */
+    public function delete_user_account(Request $request)
+    {
+        $user = $request->user();
+
+        if (! $user->hasRole('Driver')) {
+            return response()->json([
+                'response' => false,
+                'message' => 'Only driver accounts can be deleted through this endpoint.',
+            ], 403);
+        }
+
+        DB::transaction(function () use ($user) {
+            $user->tokens()->delete();
+            $user->delete();
+        });
+
         return response()->json([
             'response' => true,
-            'message' => 'Abi Mat karo, Jab Dipankar sir bolega tab karo',
-            'data' => [
-                
-            ],
-        ]);
-        $user = User::findOrFail($request->user()->id); 
-        $user->delete();
-        return response()->json([
-            'response' => true,
-            'message' => 'User account Deleted Successfully',
-            'data' => [
-                
-            ],
+            'message' => 'Your account has been deleted successfully.',
         ]);
     }
-    
 }

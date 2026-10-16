@@ -35,6 +35,8 @@ return [
         ],
     ],
 
+    'support_email' => env('SUPPORT_EMAIL'),
+
     'banku' => [
         'base_url' => env('BANKU_BASE_URL', 'https://app.banku.co.in'),
         'client_id' => env('BANKU_CLIENT_ID'),
