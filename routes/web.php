@@ -447,7 +447,6 @@ Route::get('/print-ticket/{bookingId}', [BookingController::class, 'print_ticket
 Route::get('/term-condition', [HomeController::class, 'term_condition'])->name('home.term_condition');
 Route::get('/privacy', [HomeController::class, 'privacy'])->name('home.privacy');
 Route::view('/delete-account', 'frontend.delete_account')->name('home.delete_account');
-
 Route::controller(HomeController::class)->group(function () {
     Route::get('/company-registrations','company_registration')->name('home.company_registration');
     Route::post('company-registrations', 'company_registration_submit')->name('front.company_registration.submit');

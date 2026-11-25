@@ -44,6 +44,8 @@ Route::post('/company/login', [CompanyRegisterApiController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/razorpay/payment-success', [PaymentApiController::class, 'paymentSuccess']);
 
+    // Account deletion, per app-store policy. Restricted to Driver-role
+    // accounts inside the controller method itself.
     Route::delete('delete-user-account', [AuthController::class, 'delete_user_account']);
     
 
