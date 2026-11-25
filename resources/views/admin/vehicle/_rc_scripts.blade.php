@@ -95,7 +95,9 @@
                             .text('RC details fetched. Submitting…');
 
                         if ($form.length && $form.attr('action')) {
-                            showRcFetchOverlay('RC details fetched. Submitting…');
+                            // The server re-checks insurance / PUCC / RC validity on
+                            // save and sets Active / Inactive from the fresh data.
+                            showRcFetchOverlay('RC details fetched. Saving and revalidating status…');
 
                             if ($form[0].checkValidity() === false) {
                                 $form.addClass('was-validated');

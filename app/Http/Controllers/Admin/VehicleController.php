@@ -389,13 +389,40 @@ public function storeFromModal(Request $request)
         $vehicle->fill($this->rcFormData($request));
 
         $rcVerificationData = $this->decodeVerificationPayload($request, 'rc_verification_data');
-        if ($rcVerificationData !== null) {
+        $refetched = $rcVerificationData !== null;
+
+        if ($refetched) {
             $vehicle->rc_verification_data = $rcVerificationData;
             $vehicle->rc_verified_at = now();
         }
 
+        // Revalidate the status against the (possibly refreshed) documents.
+        // After an RC re-fetch the status follows the verified data exactly:
+        // Active only when insurance, PUCC and RC are all valid. On a plain
+        // manual save the admin's choice stands, except that a vehicle with
+        // an expired document can't be marked Active.
+        $issues = $vehicle->complianceIssues();
+
+        if ($refetched) {
+            $vehicle->is_visible = empty($issues) ? 1 : 0;
+        } elseif ($vehicle->is_visible && $vehicle->expiredComplianceReasons()) {
+            $vehicle->is_visible = 0;
+        }
+
         if ($vehicle->save()) {
-            return redirect()->route('vehicle.index')->with('success', 'Vehicle updated successfully.');
+            if ($vehicle->is_visible) {
+                $message = $refetched
+                    ? 'RC details refreshed. All documents are valid, so the vehicle is now Active.'
+                    : 'Vehicle updated successfully.';
+
+                return redirect()->route('vehicle.index')->with('success', $message);
+            }
+
+            $message = ($refetched ? 'RC details refreshed, but the' : 'Vehicle saved. The')
+                . ' vehicle is Inactive'
+                . ($issues ? ': ' . implode('; ', $issues) . '.' : '.');
+
+            return redirect()->route('vehicle.index')->with($issues ? 'error' : 'success', $message);
         }
 
         return redirect()->back()->with('error', 'Vehicle update failed.');

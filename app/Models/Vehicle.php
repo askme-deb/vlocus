@@ -172,22 +172,108 @@ class Vehicle extends Model implements HasMedia
         $expired = [];
 
         foreach (self::COMPLIANCE_DATES as $column => $label) {
-            $value = $this->{$column};
+            $date = self::parseRcDate($this->{$column});
 
-            if (blank($value)) {
-                continue;
-            }
-
-            try {
-                if (Carbon::parse($value)->isPast()) {
-                    $expired[] = $label;
-                }
-            } catch (\Exception $e) {
-                // Unparseable date - ignore rather than block the vehicle.
+            // Blank or unparseable dates are ignored here rather than
+            // blocking the vehicle; complianceIssues() is the strict check.
+            if ($date && $date->isPast()) {
+                $expired[] = $label;
             }
         }
 
         return $expired;
+    }
+
+    /**
+     * Strict compliance check used to decide whether a vehicle may be
+     * (re)activated after an RC re-fetch: every compliance date must be
+     * present, a real date and not yet passed, and the RC itself must be
+     * ACTIVE when BankU reports a status. Returns human-readable problems;
+     * an empty array means the vehicle is fully compliant.
+     *
+     * @return array<int, string>
+     */
+    public function complianceIssues(): array
+    {
+        $issues = [];
+
+        foreach (self::COMPLIANCE_DATES as $column => $label) {
+            $value = $this->{$column};
+
+            if (blank($value)) {
+                $issues[] = "{$label} validity date is missing";
+                continue;
+            }
+
+            $date = self::parseRcDate($value);
+
+            if (! $date) {
+                $issues[] = "{$label} validity date \"{$value}\" is invalid";
+            } elseif ($date->isPast()) {
+                $issues[] = "{$label} expired on " . $date->format('d-m-Y');
+            }
+        }
+
+        if (filled($this->rc_status) && strtoupper(trim((string) $this->rc_status)) !== 'ACTIVE') {
+            $issues[] = "RC status is {$this->rc_status}";
+        }
+
+        return $issues;
+    }
+
+    /**
+     * Parse a free-form RC date string (BankU formats vary: 2027-10-19,
+     * 19-10-2027, 19/10/2027, 19-Oct-2027, ...). Returns the END of that day,
+     * since a document is valid through its "upto" date, or null when the
+     * value is blank, unparseable or has an implausible year (e.g. a typo
+     * like "20267-10-19").
+     */
+    public static function parseRcDate(mixed $value): ?Carbon
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        $date = null;
+
+        foreach (['Y-m-d', 'd-m-Y', 'd/m/Y', 'Y/m/d', 'd.m.Y', 'd-M-Y', 'd M Y', 'd-M-y'] as $format) {
+            try {
+                $parsed = Carbon::createFromFormat('!' . $format, $value);
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            if ($parsed && $parsed->format($format) === $value) {
+                $date = $parsed;
+                break;
+            }
+        }
+
+        if (! $date) {
+            // Free-form fallback. Reject values with a 5+ digit number or a
+            // year that isn't actually in the text (PHP reads "20267-10-19"
+            // as 2007-10-19, which would be silently wrong).
+            if (preg_match('/\d{5,}/', $value)) {
+                return null;
+            }
+
+            try {
+                $date = Carbon::parse($value);
+            } catch (\Throwable $e) {
+                return null;
+            }
+
+            if (! str_contains($value, (string) $date->year)) {
+                return null;
+            }
+        }
+
+        if ($date->year < 1950 || $date->year > 2200) {
+            return null;
+        }
+
+        return $date->endOfDay();
     }
 
     /**
