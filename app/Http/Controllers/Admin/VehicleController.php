@@ -139,7 +139,29 @@ class VehicleController extends Controller implements HasMiddleware
         ];
 
         $columns = [];
+        $flat = $this->flattenPayload($payload);
+
         foreach ($map as $column => $keys) {
+            // Validity dates: take the latest valid date among the listed
+            // keys and any key matching the pattern (mirrors rcPickLatestDate
+            // in _rc_populate.blade.php), so a renewal beats a lapsed value.
+            if (isset(self::RC_DATE_PATTERNS[$column])) {
+                $latest = null;
+                foreach ($flat as $key => $value) {
+                    if (! in_array($key, $keys, true) && ! preg_match(self::RC_DATE_PATTERNS[$column], (string) $key)) {
+                        continue;
+                    }
+                    $date = Vehicle::parseRcDate(is_scalar($value) ? (string) $value : null);
+                    if ($date && (! $latest || $date->gt($latest))) {
+                        $latest = $date;
+                    }
+                }
+                if ($latest) {
+                    $columns[$column] = $latest->format('Y-m-d');
+                }
+                continue;
+            }
+
             foreach ($keys as $key) {
                 $value = $payload[$key] ?? null;
                 if (is_scalar($value) && trim((string) $value) !== '') {
@@ -157,6 +179,41 @@ class VehicleController extends Controller implements HasMiddleware
         }
 
         return $columns;
+    }
+
+    /**
+     * Key patterns for RC validity dates. Must stay in sync with
+     * window.RC_DATE_PATTERNS in _rc_populate.blade.php.
+     */
+    private const RC_DATE_PATTERNS = [
+        'insurance_upto'       => '/insurance.*(upto|up_to|valid|expir|end)/i',
+        'pucc_upto'            => '/pucc.*(upto|up_to|valid|expir)/i',
+        'rc_expiry_date'       => '/(^|_)(fit_up_?to|rc_expiry(_date)?|rc_valid(ity|_upto)?)$/i',
+        'tax_upto'             => '/tax.*(upto|up_to|valid)/i',
+        'permit_valid_upto'    => '/^(?!.*national).*permit.*(upto|up_to|valid)/i',
+        'national_permit_upto' => '/national_permit.*(upto|up_to|valid)/i',
+    ];
+
+    /**
+     * Flatten a nested payload into ['a_b_0_c' => value] so date key
+     * patterns also match values inside nested objects / arrays.
+     *
+     * @param  array<string|int, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function flattenPayload(array $payload, string $prefix = ''): array
+    {
+        $flat = [];
+        foreach ($payload as $key => $value) {
+            $path = $prefix === '' ? (string) $key : $prefix . '_' . $key;
+            if (is_array($value)) {
+                $flat += $this->flattenPayload($value, $path);
+            } else {
+                $flat[$path] = $value;
+            }
+        }
+
+        return $flat;
     }
 
     /**
@@ -394,6 +451,11 @@ public function storeFromModal(Request $request)
         if ($refetched) {
             $vehicle->rc_verification_data = $rcVerificationData;
             $vehicle->rc_verified_at = now();
+
+            // Validity dates always follow the freshly verified payload (the
+            // latest date per document), independent of the browser script.
+            $fresh = $this->rcColumnsFromPayload($rcVerificationData);
+            $vehicle->fill(array_intersect_key($fresh, self::RC_DATE_PATTERNS));
         }
 
         // Revalidate the status against the (possibly refreshed) documents.
