@@ -625,9 +625,7 @@ class DriverApiController extends Controller
                 ->toMediaCollection('system-user-pan');
         }
 
-        $driver_id = $user->driver->id;
-
-        $driver = Driver::findOrFail($driver_id); 
+        $driver = $user->driver;
 
      
        
@@ -729,33 +727,29 @@ class DriverApiController extends Controller
      
 
     public function get_driver_data(Request $request){
-        $user = User::findOrFail($request->user()->id); 
-        $firstImageUrl = $user->getFirstMediaUrl('system-user-image');
-        $aadhar_image = $user->getFirstMediaUrl('system-user-aadhar');
-        $pan_image = $user->getFirstMediaUrl('system-user-pan');
-       
-       
-        
-        $vehicle = Vehicle::findOrFail($user->driver->vehicle_id); 
-        $driver_vehicle_image = $vehicle->getFirstMediaUrl('vehicles');
-        
-        
-        $driver_id = $user->driver->id;
-        $driver = Driver::findOrFail($driver_id);
-        $driver_license_image = $driver->getFirstMediaUrl('driver-license');
-     
-        
-     
+        $user = User::findOrFail($request->user()->id)->load('driver.vehicle.vehicleType');
+        $driver = $user->driver;
+
+        if (! $driver) {
+            return response()->json([
+                'response' => false,
+                'message' => 'Driver profile not found for this account.',
+            ], 404);
+        }
+
+        // vehicle_id is nullable (set to NULL when a vehicle is deleted), so a driver may have no vehicle.
+        $vehicle = $driver->vehicle;
+
         return response()->json([
             'response' => true,
             'message' => 'Fatched Driver Data',
             'data' => [
-                'driver_data' => $user->load('driver.vehicle.vehicleType'),
-                'profile_image_url' => $firstImageUrl != "" ? $firstImageUrl : NULL,
-                'aadhar_image_url' => $aadhar_image != "" ? $aadhar_image : NULL,
-                'pan_image_url' => $pan_image != "" ? $pan_image : NULL,
-                'driver_license_image_url' => $driver_license_image != "" ? $driver_license_image : NULL,
-                'driver_vehicle_image'=>$driver_vehicle_image != "" ? $driver_vehicle_image : NULL,
+                'driver_data' => $user,
+                'profile_image_url' => $user->getFirstMediaUrl('system-user-image') ?: null,
+                'aadhar_image_url' => $user->getFirstMediaUrl('system-user-aadhar') ?: null,
+                'pan_image_url' => $user->getFirstMediaUrl('system-user-pan') ?: null,
+                'driver_license_image_url' => $driver->getFirstMediaUrl('driver-license') ?: null,
+                'driver_vehicle_image' => $vehicle?->getFirstMediaUrl('vehicles') ?: null,
             ],
         ]);
     }
