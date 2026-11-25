@@ -48,3 +48,19 @@ Thumbs.db
 *.mov
 *.wmv
 
+
+# Laravel
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+!/storage/framework/*/.gitignore
+/storage/logs/*
+/storage/pail
+/public/hot
+/.phpunit.result.cache
+/.phpunit.cache
+.env.backup
+.env.production
+npm-debug.log
+yarn-error.log
