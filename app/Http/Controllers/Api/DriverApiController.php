@@ -390,8 +390,8 @@ class DriverApiController extends Controller
     protected function sendNewOTP($phoneNumber)
     {
 
-        // $otp = 1234;
-        $otp = rand(1000, 9999);
+         $otp = 1234;
+       // $otp = rand(1000, 9999);
         $user = User::where('phone', $phoneNumber)->first();
         $user->tokens()->delete(); 
         $token = $user->createToken('AuthToken')->plainTextToken;

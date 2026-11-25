@@ -277,10 +277,6 @@
             decodedPath.forEach(p => bounds.extend(p));
             map.fitBounds(bounds);
 
-            google.maps.event.addListenerOnce(map, "bounds_changed", function () {
-                map.setZoom(12); // closer view
-            });
-
             // Clear old markers
             shopMarkers.forEach(marker => marker.setMap(null));
             shopMarkers = [];

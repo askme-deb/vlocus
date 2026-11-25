@@ -42,6 +42,24 @@ if (!function_exists('generateBookingNumber')) {
     }
 }
 
+if (!function_exists('maskPhoneNumber')) {
+    /**
+     * Partially hides a phone number for display on public-facing pages,
+     * e.g. "9038200000" -> "90382XXXXX". Keeps the first 5 digits visible
+     * and masks the rest; strings too short to mask are returned as-is.
+     */
+    function maskPhoneNumber(?string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone) ?? '';
+
+        if (strlen($digits) <= 5) {
+            return $digits;
+        }
+
+        return substr($digits, 0, 5) . str_repeat('X', strlen($digits) - 5);
+    }
+}
+
 if (!function_exists('generateOrderNumber')) {
     function generateOrderNumber() {
         $dateTime = date('YmdHis');

@@ -53,8 +53,13 @@ Route::get('/vehicles/realtime', function (Request $request) {
 
 
 
- Route::get('/track-order', [TrackingController::class, 'order_tracking'])->name('order.tracking');
- Route::get('/order/{delivery_id}/{shop_id}/track', [TrackingController::class, 'order_tracking'])->name('order.tracking.legacy');
+ // Public, unauthenticated customer order-tracking page. Addressed by an
+ // opaque per-order tracking_token (see DeliveryScheduleShop) rather than a
+ // sequential id, so it can't be enumerated or guessed.
+ Route::get('/track/{token}', [TrackingController::class, 'order_tracking'])->name('order.tracking');
+ Route::get('/track/{token}/location', [TrackingController::class, 'public_driver_location'])->name('order.tracking.location');
+ Route::post('/track/{token}/contact', [TrackingController::class, 'update_receiver_contact'])->name('order.tracking.contact');
+ Route::post('/track/{token}/rating', [TrackingController::class, 'submit_rating'])->name('order.tracking.rating');
  Route::get('/driver/{id}/location', [TrackingController::class, 'get_driver_location'])->name('driver.location');
 
  Route::get('/track-delivery', [DeliveryScheduleController::class, 'track_delivery'])->name('track.delivery');
@@ -441,6 +446,8 @@ Route::post('/proceed-to-booking', [BookingController::class, 'proceed_booking']
 Route::get('/print-ticket/{bookingId}', [BookingController::class, 'print_ticket'])->name('home.print.ticket');
 Route::get('/term-condition', [HomeController::class, 'term_condition'])->name('home.term_condition');
 Route::get('/privacy', [HomeController::class, 'privacy'])->name('home.privacy');
+Route::view('/delete-account', 'frontend.delete_account')->name('home.delete_account');
+
 Route::controller(HomeController::class)->group(function () {
     Route::get('/company-registrations','company_registration')->name('home.company_registration');
     Route::post('company-registrations', 'company_registration_submit')->name('front.company_registration.submit');

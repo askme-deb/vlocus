@@ -641,9 +641,13 @@ class ReportController extends Controller implements HasMiddleware
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('shop', function ($sq) use ($search) {
-                        $sq->where('shop_name', 'like', '%' . $search . '%');
+                        $sq->where('shop_name', 'like', '%' . $search . '%')
+                            ->orWhere('shop_registration_number', 'like', '%' . $search . '%')
+                            ->orWhere('shop_contact_person_name', 'like', '%' . $search . '%')
+                            ->orWhere('shop_contact_person_phone', 'like', '%' . $search . '%');
                     })->orWhereHas('deliverySchedule.driver', function ($dq) use ($search) {
-                        $dq->where('name', 'like', '%' . $search . '%');
+                        $dq->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('phone', 'like', '%' . $search . '%');
                     });
                 });
             }
@@ -702,13 +706,17 @@ class ReportController extends Controller implements HasMiddleware
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_no', 'like', '%' . $search . '%')
                     ->orWhereHas('shop', function ($sq) use ($search) {
-                        $sq->where('shop_name', 'like', '%' . $search . '%');
+                        $sq->where('shop_name', 'like', '%' . $search . '%')
+                            ->orWhere('shop_registration_number', 'like', '%' . $search . '%')
+                            ->orWhere('shop_contact_person_name', 'like', '%' . $search . '%')
+                            ->orWhere('shop_contact_person_phone', 'like', '%' . $search . '%');
                     })
                     ->orWhereHas('deliverySchedule.vehicle', function ($vq) use ($search) {
                         $vq->where('vehicle_number', 'like', '%' . $search . '%');
                     })
                     ->orWhereHas('deliverySchedule.driver', function ($dq) use ($search) {
-                        $dq->where('name', 'like', '%' . $search . '%');
+                        $dq->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('phone', 'like', '%' . $search . '%');
                     });
             });
         }
@@ -752,6 +760,7 @@ class ReportController extends Controller implements HasMiddleware
                     'invoice_no'        => $shopDelivery->invoice_no ?? '-',
                     'from_location'     => $shopDelivery->branch->name ?? 'N/A',
                     'to_location'       => $shopDelivery->shop->shop_name ?? 'N/A',
+                    'shop_registration_number' => $shopDelivery->shop->shop_registration_number ?? '-',
                     'route'             => $schedule?->route_code ?? '-',
                     'district'          => $shopDelivery->shop->shop_district ?? '-',
                     'distance'          => $distance,

@@ -37,6 +37,32 @@
         padding: 8px 20px;
     }
 
+    .dispatch-report .btn-filter.btn-primary {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+        color: #fff;
+    }
+
+    .dispatch-report .btn-filter.btn-primary:hover,
+    .dispatch-report .btn-filter.btn-primary:focus {
+        background-color: #4338ca;
+        border-color: #4338ca;
+        color: #fff;
+    }
+
+    .dispatch-report .btn-filter.btn-outline-secondary {
+        background-color: #fff;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+
+    .dispatch-report .btn-filter.btn-outline-secondary:hover,
+    .dispatch-report .btn-filter.btn-outline-secondary:focus {
+        background-color: #f1f5f9;
+        border-color: #94a3b8;
+        color: #334155;
+    }
+
     .dispatch-report table.premium-table {
         border-collapse: separate;
         border-spacing: 0;
@@ -135,7 +161,7 @@
                     <input type="date" name="end_date" value="{{ $endDate }}" class="form-control">
                 </div>
                 <div class="col-md-4">
-                    <label><i class='bx bx-search'></i> Search (Invoice / Shop / Vehicle / Driver)</label>
+                    <label><i class='bx bx-search'></i> Search (Invoice / Shop / Reg. No / Contact / Vehicle / Driver / Phone)</label>
                     <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Search...">
                 </div>
                 <div class="col-md-2 text-end">
@@ -153,6 +179,7 @@
                             <th>Invoice No.</th>
                             <th>From Location</th>
                             <th>To Location</th>
+                            <th>Shop Reg. No.</th>
                             <th>Route</th>
                             <th>District</th>
                             <th>Distance</th>
@@ -176,6 +203,7 @@
                                 <td>{{ $row['invoice_no'] }}</td>
                                 <td>{{ $row['from_location'] }}</td>
                                 <td>{{ $row['to_location'] }}</td>
+                                <td>{{ $row['shop_registration_number'] }}</td>
                                 <td>{{ $row['route'] }}</td>
                                 <td>{{ $row['district'] }}</td>
                                 <td>{{ $row['distance'] }}</td>
@@ -210,7 +238,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="18">
+                                <td colspan="19">
                                     <div class="empty-state">
                                         <i class='bx bx-search-alt'></i>
                                         No dispatch records found for the selected filters.
